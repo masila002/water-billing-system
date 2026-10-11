@@ -1,30 +1,71 @@
+import { createDemoStore } from "./demo-store.js";
+let demo;
+function demoStore() {
+  return (demo ||= createDemoStore({ storage: localStorage }));
+}
+export function resetDemo() {
+  demoStore().reset();
+}
 export async function request(state, path, options = {}) {
-  const response = await fetch(`${state.apiBase.replace(/\/$/, '')}${path}`, {
+  if (state.mode === "demo")
+    return demoStore().request(path, options, {
+      role: state.role,
+      tenantId: state.tenantId,
+    });
+  const response = await fetch(`${state.apiBase.replace(/\/$/, "")}${path}`, {
     ...options,
+    signal: AbortSignal.timeout(8000),
     headers: {
-      'Content-Type': 'application/json',
-      'X-Tenant-ID': state.tenantId,
+      "Content-Type": "application/json",
+      "X-Tenant-ID": state.tenantId,
       ...options.headers,
     },
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.message || `Request failed (${response.status})`);
+  if (!response.ok)
+    throw new Error(
+      Array.isArray(body.message)
+        ? body.message.join("; ")
+        : body.message || `Request failed (${response.status})`,
+    );
   return body;
 }
-
 export async function loadData(state) {
-  const results = await Promise.allSettled([
-    request(state, '/dashboard'), request(state, '/customers'), request(state, '/accounts'),
-    request(state, '/bills'), request(state, '/payments'),
-  ]);
-  const [summary, customers, accounts, bills, payments] = results;
-  state.connected = summary.status === 'fulfilled';
-  if (summary.status === 'fulfilled') state.data.summary = summary.value;
-  if (customers.status === 'fulfilled') state.data.customers = customers.value;
-  if (accounts.status === 'fulfilled') state.data.accounts = accounts.value;
-  if (bills.status === 'fulfilled') state.data.bills = bills.value;
-  if (payments.status === 'fulfilled') state.data.payments = payments.value;
-  return results.every((result) => result.status === 'rejected')
-    ? summary.reason?.message || 'Could not reach the API.'
-    : null;
+  const keys = [
+    "summary",
+    "customers",
+    "accounts",
+    "bills",
+    "payments",
+    ...(state.mode === "demo" ? ["readings", "tariffs", "audit"] : []),
+  ];
+  try {
+    const values = await Promise.all(
+      keys.map((key) =>
+        request(state, key === "summary" ? "/dashboard" : `/${key}`),
+      ),
+    );
+    state.data = {
+      readings: [],
+      tariffs: [],
+      audit: [],
+      ...Object.fromEntries(keys.map((key, i) => [key, values[i]])),
+    };
+    state.connected = true;
+    state.error = null;
+  } catch (error) {
+    state.connected = false;
+    state.error = error.message;
+    state.data = {
+      summary: null,
+      customers: [],
+      accounts: [],
+      bills: [],
+      payments: [],
+      readings: [],
+      tariffs: [],
+      audit: [],
+    };
+  }
+  return state.error;
 }

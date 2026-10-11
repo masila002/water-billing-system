@@ -247,3 +247,84 @@ tbody tr:last-child td { border-bottom: 0; }
   .page-footer { font-size: 7px; letter-spacing: .35px; }
   .dialog { padding: 18px; }
 }
+/* Shared demo workflow surfaces. */
+:root { --muted: #596b62; }
+a { color: var(--green-dark); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+.powered { display: block; color: #365c4e; font-size: 12px; text-decoration: none; line-height: 1.7; }
+.demo-banner { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 34px; color: #3f614f; background: #e8f0e3; font-size: 11px; border-bottom: 1px solid #d8e5d3; }
+.demo-banner .text-button { margin: 0; white-space: nowrap; }
+.role-control select { max-width: 150px; border: 1px solid var(--line); border-radius: 6px; background: white; padding: 7px; font-size: 11px; }
+.workflow-strip { display:flex; flex-wrap: wrap; align-items:center; justify-content:space-between; gap:16px; border:1px solid #dbe6db; background:#fafff7; border-radius:9px; padding:18px 22px; margin-bottom:22px; }
+.workflow-strip .eyebrow { margin-bottom:6px; font-size:9px; }
+.workflow-strip strong { font-size:13px; }
+.workflow-steps { display:flex; flex-wrap:wrap; gap:8px; }
+.workflow-steps button { border:0; background:transparent; color:#39785d; cursor:pointer; font-size:11px; padding:9px 5px; }
+.workflow-steps button:hover { background:#e3eedf; border-radius:5px; }
+.workflow-steps span { color:#253d30; font-weight:600; margin:0 4px; }
+.calculation { background:#eef5e9; border:1px solid #d8e5d3; border-radius:6px; padding:16px; line-height:1.7; font-size:13px; }
+.form-field input, .form-field select { min-height:42px; }
+.form-field-wide { grid-column:1 / -1; }
+.demo-disclosure { font-size:12px; color:#59685d; line-height:1.7; }
+.report-grid { display:grid; grid-template-columns:1fr 1.5fr; gap:20px; }
+.report-panel { padding:24px; min-width:0; }
+.collection-row { display:grid; grid-template-columns:1fr auto; gap:12px; margin-top:25px; font-size:13px; text-transform:capitalize; }
+.collection-row meter { width:100%; height:12px; grid-column:1 / -1; }
+.document-brand { display:flex; flex-direction:column; gap:7px; padding:16px 0; border-bottom:2px solid #173e32; }
+.document-brand span { font-size:11px; color:#59685d; }
+.print-document dl { display:grid; grid-template-columns:1fr 1.4fr; gap:15px; font-size:13px; }
+.print-document dd { margin:0; font-weight:600; text-align:right; overflow-wrap:anywhere; }
+.print-document dt { color:#59685d; }
+.print-document > p { font-size:11px; margin-top:30px; }
+.welcome { min-height:100vh; display:grid; grid-template-columns:1.2fr 1fr; max-width:1500px; margin:0 auto; align-items:center; padding:70px; gap:9vw; }
+.welcome-story > .powered { margin-bottom:90px; letter-spacing:2px; font-size:11px; }
+.welcome-story h1 { font-size:clamp(40px,4.5vw,70px); line-height:1.12; letter-spacing:-2.5px; color:#203b36; margin:20px 0 24px; }
+.welcome-story > p:not(.eyebrow) { max-width:440px; line-height:1.8; color:#53665c; font-size:16px; }
+.welcome-flow { margin:34px 0; font-size:12px; font-weight:600; color:#355847; line-height:2; }
+.welcome-flow span { padding:0 8px; color:#6e8477; }
+.welcome-story small { color:#566b5d; font-size:11px; }
+.welcome-card { padding:38px; background:#fff; border:1px solid #dce6d9; border-radius:16px; box-shadow:0 20px 80px #233f3210; }
+.demo-pill { display:inline-block; color:#2f614b; background:#e9f3e4; padding:7px 11px; border-radius:30px; font-size:10px; font-weight:700; letter-spacing:1px; }
+.welcome-card h2 { font-family:var(--serif); font-size:26px; letter-spacing:-1px; margin:24px 0 12px; }
+.welcome-card > p { font-size:14px; line-height:1.8; color:#59685d; }
+.welcome-card form { margin:30px 0 22px; }
+.welcome-card .button { width:100%; margin-top:20px; justify-content:space-between; min-height:48px; }
+.welcome-card .powered { border-top:1px solid var(--line); padding-top:20px; margin-top:24px; }
+.badge-issued { color:#79520b; background:#fff3d6; }
+.dialog { max-height:90vh; overflow:auto; }
+@media(max-width:1100px) { .workflow-strip { align-items:start; } .report-grid { grid-template-columns:1fr; } .welcome { padding:40px;gap:40px; } .welcome-card { padding:28px; } }
+@media(max-width:700px) {
+  .welcome { grid-template-columns:1fr; padding:28px 20px; gap:28px; }
+  .welcome-story > .powered { margin-bottom:30px; }
+  .welcome-story h1 { font-size:42px; }
+  .welcome-flow, .welcome-story small { display:none; }
+  .welcome-card { padding:25px; }
+  .demo-banner { padding:10px 15px; font-size:10px; line-height:1.6; }
+  .demo-banner .text-button { font-size:10px; }
+  .breadcrumb { display:none; }
+  .top-actions { width:100%; justify-content:space-between; }
+  .workflow-strip { padding:15px; }
+  .workflow-steps { gap:2px; }
+  .workflow-steps button { font-size:10px; padding:6px 1px; }
+  .report-panel { padding:17px; }
+  .form-grid { grid-template-columns:1fr; }
+  .page-footer a { font-size:10px; }
+}
+@media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+@media print {
+  body { background:#fff; min-width:0; }
+  .app-shell, #toast { display:none !important; }
+  .dialog-backdrop { position:static; display:block; background:transparent; padding:0; }
+  .dialog { box-shadow:none; border:0; max-height:none; width:100%; max-width:none; overflow:visible; }
+  .dialog-close, .dialog-actions, .form-error { display:none !important; }
+}
+/* Keep financial totals immediately legible after every refresh. */
+.metric { animation:none; opacity:1; }
+.metric-top, .page-subtitle, .metric-note { color:#53655c; }
+.eyebrow, .nav-label, th { color:#5d7065; }
+@media(max-width:900px) { .insight-stats { position:static; margin-top:12px; padding-top:0; } .insight-panel > p { max-width:100%; } }
+@media print {
+  *, *::before, *::after { animation:none !important; transition:none !important; }
+  .dialog, .dialog-backdrop { opacity:1 !important; transform:none !important; }
+  .print-document, .dialog-heading { color:#172d23; }
+}

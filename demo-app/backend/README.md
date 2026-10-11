@@ -13,7 +13,7 @@ The API is a NestJS service using PostgreSQL through `pg`. It expects the databa
    npm run start:dev
    ```
 
-The API listens on port `4000` by default. Environment variables supplied by the process take precedence; when `../.env` exists it is loaded for local development.
+The API listens on `127.0.0.1:4000` by default. `HOST` may be set explicitly for a separately secured deployment. Environment variables supplied by the process take precedence; when `../.env` exists it is loaded for local development.
 
 ## Routes
 

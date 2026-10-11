@@ -1,15 +1,7 @@
-# Frontend structure
+# Frontend
 
-The Vite dashboard is organized by responsibility:
+Vite serves the operations UI. `src/app/main.js` orchestrates session, navigation and forms. `src/lib/api.js` chooses explicit local demo or existing API. `src/lib/demo-store.js` persists fictional state and validates role permissions and financial invariants; `src/lib/billing.js` provides exact currency rounding.
 
-- `frontend/src/app/` owns application startup, state, and the workspace shell.
-- `frontend/src/components/` contains shared HTML renderers for dialogs, icons, and tables.
-- `frontend/src/features/` contains dashboard, register, and workflow-specific views.
-- `frontend/src/lib/` contains API access and display formatting helpers.
-- `frontend/src/styles/` contains the global dashboard stylesheet.
-- `frontend/public/` contains static browser assets such as the favicon.
-- `shared/` contains the demo tenant/configuration constants and API data contracts.
+The default local demo requires no database. Extra views are meter readings, reports and activity. Existing customer/payment forms and shared components are reused. In optional API mode those extra views/actions are hidden until API contracts support them.
 
-Run the dashboard from `frontend/` with `npm run dev`. It uses the API at
-`http://localhost:4000/api` and the demo tenant UUID by default; both can be
-changed through the API settings dialog.
+Use the root commands `npm run dev`, `npm run build`, `npm test` and `npm run test:e2e`. Contracts are described in `../shared/types.d.ts`; pilot gaps and security boundaries are in the root documentation.

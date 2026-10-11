@@ -5,7 +5,7 @@ export interface Customer {
   phone: string | null;
   email: string | null;
   address: string | null;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 export interface ServiceAccount {
@@ -15,7 +15,7 @@ export interface ServiceAccount {
   customerId: string;
   customerName: string;
   tariffName: string;
-  status: 'active' | 'suspended' | 'closed';
+  status: "active" | "suspended" | "closed";
 }
 
 export interface Bill {
@@ -28,7 +28,7 @@ export interface Bill {
   periodEnd: string;
   dueAt: string;
   totalMinor: number | string;
-  status: 'issued' | 'partially_paid' | 'paid' | 'overdue' | 'void';
+  status: "issued" | "partially_paid" | "paid" | "overdue" | "void";
 }
 
 export interface Payment {
@@ -37,8 +37,48 @@ export interface Payment {
   accountNumber: string;
   customerName: string;
   amountMinor: number | string;
-  method: 'mpesa' | 'cash' | 'bank' | 'other';
-  status: 'pending' | 'confirmed' | 'failed' | 'reversed';
+  method: "mpesa" | "cash" | "bank" | "other";
+  status: "pending" | "confirmed" | "failed" | "reversed";
   externalReference: string | null;
   paidAt: string;
+}
+/** Fields supplied by the isolated browser demo; API records may omit them. */
+export interface DemoAccount extends ServiceAccount {
+  tariffId: string;
+  lastReading: number;
+  balanceMinor: number;
+}
+export interface DemoBill extends Bill {
+  meterReadingId: string;
+  paidMinor: number;
+  balanceMinor: number;
+  consumption: number;
+  ratePerUnitMinor: number;
+  fixedChargeMinor: number;
+}
+export interface MeterReading {
+  id: string;
+  serviceAccountId: string;
+  accountNumber: string;
+  customerName: string;
+  previousReading: number;
+  currentReading: number;
+  consumption: number;
+  readAt: string;
+}
+export interface DemoTariff {
+  id: string;
+  name: string;
+  ratePerUnitMinor: number;
+  fixedChargeMinor: number;
+  isActive: boolean;
+}
+export interface DemoActivity {
+  id: string;
+  eventType: string;
+  entityType: string;
+  entityId: string;
+  actorRole: "admin" | "reader" | "cashier" | "accountant";
+  createdAt: string;
+  details: string;
 }
