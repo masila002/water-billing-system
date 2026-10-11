@@ -1,6 +1,6 @@
 # SDR-009 — deploy and environments
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: WCSEA §4 infra matrix; MB-05 cells

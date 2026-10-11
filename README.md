@@ -1,6 +1,28 @@
 # MajiBill
 
-A working water-billing pitch demo, **powered by [404HubSpot](https://404-hub-spot.vercel.app/)**. Register a customer, connect a meter, capture a reading, issue a bill, record simulated payments, and follow the balance through reports and receipts.
+**`MAJIBILL`** — the real multitenant water-billing platform. This root is the
+product; `demo-app/` is the pitch demo. They share nothing at runtime.
+
+- **Team start:** [Team guide](docs/TEAM-GUIDE.md) (demo vs real, why split,
+  how to host each) → [Dev manual](docs/DEV-MANUAL.md) (spin up everything)
+  → [Production map](docs/PRODUCTION.md) → [Decisions](docs/system-design/).
+- **Demo (pitch):** `npm run dev` → http://127.0.0.1:3000. No database.
+  See [demo runbook](docs/DEMO-RUNBOOK.md).
+- **MajiBill (real):** `docker compose up -d` → API http://127.0.0.1:4000.
+  Needs Postgres + Redis. See [dev manual](docs/DEV-MANUAL.md).
+
+```text
+apps/api/       MajiBill core API (NestJS modular monolith)
+apps/web/       Staff console (Next.js)
+apps/reader/    Reader field app (Expo React Native, offline-first)
+packages/       Shared domain, contracts, UI, config
+db/             SQL-first RLS migrations (the database contract)
+docs/           Team guide, dev manual, SDRs, runbooks
+project-kit/    Brief, environments, commands, conventions, risks
+demo-app/       Pitch demo (Vite + NestJS + localStorage, isolated)
+tests/          Browser verification for the demo
+```
+
 
 ## Run the demo
 

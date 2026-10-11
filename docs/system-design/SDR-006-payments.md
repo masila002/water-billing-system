@@ -1,6 +1,6 @@
 # SDR-006 — payments and ledger
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: LPIP §1-7; Master §2-3, §9, §15-25

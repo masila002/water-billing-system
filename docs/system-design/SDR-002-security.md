@@ -1,6 +1,6 @@
 # SDR-002 — security (authn, RBAC, isolation)
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: Secure-by-design; Auth guide; Tenancy §5-6, §10

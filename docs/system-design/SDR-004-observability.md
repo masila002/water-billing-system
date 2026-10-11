@@ -1,6 +1,6 @@
 # SDR-004 — observability (logs, traces, alerts)
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: WCSEA §14; Secure-by-design logging

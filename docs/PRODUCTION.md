@@ -1,6 +1,19 @@
-# Production foundation (phased pilot v1)
+# Production foundation (phased pilot v1) — MAJIBILL
 
 Real system lives in root. `demo-app/` is the pitch demo, untouched.
+Team start: [team guide](TEAM-GUIDE.md) → [dev manual](DEV-MANUAL.md).
+
+## Local dev (Docker)
+
+```bash
+cp -n .env.example .env
+docker compose up -d            # majibill-postgres :5434 + majibill-redis :6381
+DATABASE_URL=postgres://majibill:<pw>@127.0.0.1:5434/majibill node db/migrate.js
+npm run dev:api                 # core API on :4000
+```
+
+Full stack: `docker compose --profile app up -d --build`.
+
 
 ```text
 apps/api/      NestJS modular monolith (health only in this slice)

@@ -1,6 +1,6 @@
 # SDR-010 — clients and parity (web + reader)
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: Mobile §13-14; Frontend; MB-08 product; MB-11 parity
