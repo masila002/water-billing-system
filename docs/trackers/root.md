@@ -1,12 +1,11 @@
 # MajiBill root tracker
 
 ## 0. Next
-Slices 01-02 merged (PR #10 foundation, PR #11 layers-infra-docs).
-Branch `feature/production/03-layers` carries spec 01
-(docs/specs/majibill/01-layers.md, Proposed) + all 12 layer
-scaffolds + gate scripts + D-013..D-024 (proposed; merge approves).
-After merge: identity code slice, customer→bill vertical, inbox +
-posting, sync. Demo stays isolated.
+Branch `feature/production/05-duplicate-cleanup` carries spec 04
+(docs/specs/majibill/04-duplicate-cleanup.md, Proposed) + D-033..D-039
+(proposed; merge approves). No code yet — approve spec, then /develop
+implements CLEAN-AC1..AC5. Open: ASSUMPTION(A-04) dist-first domain tests.
+Demo stays isolated.
 
 ## 1. Status
 | Slice | State | Evidence |

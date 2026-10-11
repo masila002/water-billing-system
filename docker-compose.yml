@@ -1,4 +1,4 @@
-# MajiBill — local topology (Griot-style, operator direction 2026-10-11).
+# MajiBill — local topology (operator direction 2026-10-11).
 # One compose project "majibill" with its own containers, network and
 # volumes. Production stays managed-Postgres + managed-Redis + container
 # host; these containers are development only.
@@ -8,7 +8,7 @@
 #   docker compose --profile app up -d --build   # adds the API container on :4000
 #
 # Host ports stay 5434 (Postgres) and 6381 (Redis) so the stack never
-# collides with Griot (5433/6380) or anything on the defaults.
+# collides with other local projects or anything on the defaults.
 name: majibill
 
 services:
