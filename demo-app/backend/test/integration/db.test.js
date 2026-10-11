@@ -9,8 +9,27 @@ const assert = require('node:assert/strict');
 const { Client } = require('pg');
 
 const APP_URL = process.env.MB_INT_APP_URL;
+const ADMIN_URL = process.env.MB_INT_ADMIN_URL;
 // eslint-disable-next-line import/no-dynamic-require
 const C = require(process.env.MB_INT_CONTEXT_FILE);
+
+if (!ADMIN_URL) {
+  throw new Error('db.test.js must run via harness.js (MB_INT_ADMIN_URL missing)');
+}
+
+// Every table carrying tenant rows, per 001_initial.sql (tenants keys by id).
+const TENANT_TABLES = [
+  'users',
+  'customers',
+  'tariffs',
+  'service_accounts',
+  'meter_readings',
+  'bills',
+  'bill_items',
+  'payments',
+  'payment_allocations',
+  'audit_events',
+];
 
 async function appClient() {
   const client = new Client({ connectionString: APP_URL });
@@ -19,10 +38,11 @@ async function appClient() {
 }
 
 describe('row-level isolation for the restricted role', () => {
-  it('sees nothing without a tenant setting (default-deny)', async () => {
+  it('sees nothing without a tenant setting (default-deny, every table)', async () => {
     const client = await appClient();
     try {
-      for (const table of ['customers', 'service_accounts', 'meter_readings', 'bills', 'payments']) {
+      // S1: cover every tenant-owned table, not a subset.
+      for (const table of [...TENANT_TABLES, 'tenants']) {
         const r = await client.query(`SELECT COUNT(*) AS n FROM ${table}`);
         assert.equal(Number(r.rows[0].n), 0, `expected zero ${table} rows without tenant context`);
       }
@@ -33,17 +53,20 @@ describe('row-level isolation for the restricted role', () => {
   it('sees exactly one tenant at a time on a reused connection', async () => {
     const client = await appClient();
     try {
-      await client.query(`SELECT set_config('app.tenant_id', $1, false)`, [C.tenantB]);
-      let r = await client.query(`SELECT id FROM customers`);
-      const bIds = r.rows.map((x) => x.id);
-      assert.ok(bIds.includes(C.customerB), 'expected fixture customer under tenant B');
-      assert.ok(!bIds.includes(C.customerA), 'tenant A rows must stay invisible');
-      await client.query(`SELECT set_config('app.tenant_id', $1, false)`, [C.tenantA]);
-      r = await client.query(`SELECT id FROM customers`);
-      assert.ok(r.rows.some((x) => x.id === C.customerA));
-      assert.ok(!r.rows.some((x) => x.id === C.customerB));
+      // S1: assert tenant confinement per table via distinct tenant ids.
+      for (const tenant of [C.tenantA, C.tenantB]) {
+        await client.query(`SELECT set_config('app.tenant_id', $1, false)`, [tenant]);
+        for (const table of TENANT_TABLES) {
+          const r = await client.query(`SELECT DISTINCT tenant_id AS t FROM ${table}`);
+          const seen = r.rows.map((x) => x.t);
+          assert.ok(seen.length >= 1, `expected ${table} rows under tenant setting`);
+          assert.deepEqual(seen, [tenant], `${table} leaked another tenant`);
+        }
+        const t = await client.query(`SELECT id FROM tenants`);
+        assert.deepEqual(t.rows.map((x) => x.id), [tenant]);
+      }
       await client.query(`RESET app.tenant_id`);
-      r = await client.query(`SELECT COUNT(*) AS n FROM customers`);
+      const r = await client.query(`SELECT COUNT(*) AS n FROM customers`);
       assert.equal(Number(r.rows[0].n), 0);
     } finally {
       await client.end();
@@ -76,6 +99,27 @@ describe('row-level isolation for the restricted role', () => {
       );
     } finally {
       await client.end();
+    }
+  });
+  it('rejects audit deletion even for a role that bypasses row security', async () => {
+    // S12: the app role lacks DELETE, which would prove grants rather than
+    // the trigger; run as superuser (RLS bypassed, trigger still fires).
+    const superuser = new Client({ connectionString: ADMIN_URL });
+    await superuser.connect();
+    try {
+      await superuser.query(`SELECT set_config('app.tenant_id', $1, false)`, [C.tenantA]);
+      const one = await superuser.query(`SELECT id FROM audit_events LIMIT 1`);
+      assert.ok(one.rowCount >= 1, 'expected audit rows from the HTTP suite');
+      await assert.rejects(
+        superuser.query(`DELETE FROM audit_events WHERE id = $1`, [one.rows[0].id]),
+        (error) => /append-only/.test(error.message),
+      );
+      const still = await superuser.query(`SELECT COUNT(*) AS n FROM audit_events WHERE id = $1`, [
+        one.rows[0].id,
+      ]);
+      assert.equal(Number(still.rows[0].n), 1);
+    } finally {
+      await superuser.end();
     }
   });
 });
@@ -114,14 +158,32 @@ describe('ledger cross-checks', () => {
       await client.end();
     }
   });
-  it('every supported write left an audit event', async () => {
+  it('leaves an audit event for every supported write, keyed by entity', async () => {
+    // S10/S11: per-entity proof, not per-type counts — one missing event fails.
+    const pairs = [
+      ['customer', 'customers'],
+      ['service_account', 'service_accounts'],
+      ['meter_reading', 'meter_readings'],
+      ['bill', 'bills'],
+      ['payment', 'payments'],
+    ];
     const client = await appClient();
     try {
       for (const tenant of [C.tenantA, C.tenantB]) {
         await client.query(`SELECT set_config('app.tenant_id', $1, false)`, [tenant]);
-        for (const type of ['customer.created', 'meter_reading.submitted', 'bill.generated', 'payment.recorded']) {
-          const r = await client.query(`SELECT COUNT(*) AS n FROM audit_events WHERE event_type = $1`, [type]);
-          assert.ok(Number(r.rows[0].n) >= 1, `expected ${type} events for tenant`);
+        for (const [entityType, table] of pairs) {
+          const rows = await client.query(`SELECT id FROM ${table}`);
+          assert.ok(rows.rowCount >= 1, `expected ${table} rows for tenant`);
+          for (const row of rows.rows) {
+            const hit = await client.query(
+              `SELECT COUNT(*) AS n FROM audit_events WHERE entity_type = $1 AND entity_id = $2`,
+              [entityType, row.id],
+            );
+            assert.ok(
+              Number(hit.rows[0].n) >= 1,
+              `missing audit event for ${entityType} ${row.id}`,
+            );
+          }
         }
       }
     } finally {

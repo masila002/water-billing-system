@@ -52,8 +52,8 @@ async function provisionServer(server) {
   const db = new Client({ connectionString: adminUrl(server, dbName) });
   await db.connect();
   try {
-    // pgcrypto is required by gen_random_uuid() but not created by the
-    // schema file itself (portability finding CF-01, schema untouched).
+    // Kept for pre-13 servers; PostgreSQL 13+ provides gen_random_uuid()
+    // in core (verified on postgres:16-alpine). Harmless either way.
     await db.query('CREATE EXTENSION IF NOT EXISTS pgcrypto');
     const schemaPath = path.resolve(__dirname, '..', '..', '..', 'database', 'schema', '001_initial.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
@@ -74,6 +74,10 @@ async function provisionServer(server) {
   return {
     dbName,
     appUrl,
+    // Superuser connection to the test database for negative-privilege
+    // probes only (S12: audit DELETE as a role that bypasses RLS but not
+    // the trigger). Env-only, never logged.
+    adminDbUrl: adminUrl(server, dbName),
     // NOTE: test-only ephemeral credential; env-only, never logged.
     async deprovision() {
       const killer = new Client({ connectionString: adminUrl(server) });

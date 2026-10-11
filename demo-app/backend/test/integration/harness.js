@@ -36,6 +36,11 @@ async function runSuite(file, env) {
       env: suiteEnv,
       stdio: 'inherit',
     });
+    // S7: a spawn failure emits `error` without `exit`; settle so cleanup runs.
+    child.once('error', (error) => {
+      console.error(`backend-integration: suite process failed to start: ${error.message}`);
+      resolve(1);
+    });
     child.once('exit', (code) => resolve(code ?? 1));
   });
 }
@@ -55,8 +60,22 @@ async function main() {
 
   console.log(`backend-integration: starting scratch PostgreSQL on 127.0.0.1:${PG_PORT}`);
   const server = await startScratchPostgres({ port: PG_PORT });
+  // S5: termination signals must still clean up the scratch container.
+  let cleaning = false;
+  const onSignal = (signal) => {
+    if (cleaning) return;
+    cleaning = true;
+    console.error(`backend-integration: received ${signal}; stopping scratch resources`);
+    server
+      .stop()
+      .catch(() => {})
+      .finally(() => process.exit(signal === 'SIGINT' ? 130 : 143));
+  };
+  process.once('SIGINT', () => onSignal('SIGINT'));
+  process.once('SIGTERM', () => onSignal('SIGTERM'));
   let provisioned = null;
   let api = null;
+  let completed = false;
   try {
     console.log('backend-integration: provisioning roles, database and schema');
     provisioned = await provisionServer(server);
@@ -79,6 +98,7 @@ async function main() {
     const suiteEnv = {
       MB_INT_BASE_URL: api.baseUrl,
       MB_INT_APP_URL: provisioned.appUrl,
+      MB_INT_ADMIN_URL: provisioned.adminDbUrl,
       MB_INT_CONTEXT_FILE: contextFile,
     };
     let failed = 0;
@@ -95,14 +115,34 @@ async function main() {
     } else {
       console.log('backend-integration: all suites passed');
     }
+    completed = true;
   } finally {
-    if (api) await api.stop();
+    cleaning = true;
+    // S6: each cleanup step runs even when an earlier one rejects.
+    if (api) {
+      try {
+        await api.stop();
+      } catch (error) {
+        console.error(`backend-integration: API stop failed: ${error.message}`);
+      }
+    }
     if (provisioned) {
-      console.log('backend-integration: dropping test database and role');
-      await provisioned.deprovision();
+      try {
+        console.log('backend-integration: dropping test database and role');
+        await provisioned.deprovision();
+      } catch (error) {
+        console.error(`backend-integration: deprovision failed: ${error.message}`);
+      }
     }
     console.log('backend-integration: stopping scratch PostgreSQL');
-    await server.stop();
+    try {
+      await server.stop();
+    } catch (error) {
+      console.error(`backend-integration: container stop failed: ${error.message}`);
+    }
+    if (!completed && process.exitCode !== 0) {
+      console.error(`backend-integration: API log retained at ${apiLog}`);
+    }
   }
 }
 
