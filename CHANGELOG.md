@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added GitHub Actions verification for pull requests and `main`: locked dependency installation, both application builds, domain tests and Chromium browser tests on Node.js 22.
+- Added bounded CI runs, pinned actions, read-only repository permissions and failure diagnostics retained for seven days.
+
 ## 0.2.0 — 2026-10-11
 
 - Completed the local water-billing demo from customer registration through payment receipt.
