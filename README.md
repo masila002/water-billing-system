@@ -38,6 +38,10 @@ npm run test:e2e                # Complete journey + mobile + failure recovery
 
 Browser evidence is generated under `test-results/` (ignored by Git). The root npm workspace and lockfile are authoritative; run installation from this directory.
 
+[GitHub Actions](https://github.com/masila002/water-billing-system/actions/workflows/verify.yml) runs `npm ci`, both builds, domain tests and Chromium browser tests for every pull request and push to `main`. It uses Node.js 22 on Ubuntu 24.04, with a 15-minute job limit and a five-minute browser-suite limit. A newer run for the same branch or pull request cancels the previous run. Fork pull requests may need a maintainer to approve their first workflow run.
+
+On failure, available browser traces, screenshots and the HTML report are uploaded as `browser-failure-diagnostics` for seven days. Early installation or build failures may have no browser artifacts; use the job logs. The workflow uses a read-only repository token and requires no application secrets or database. These checks cover the local demo; they do not verify PostgreSQL integration or production readiness.
+
 ## Project structure
 
 ```text
