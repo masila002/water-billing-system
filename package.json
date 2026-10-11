@@ -1,0 +1,24 @@
+{
+  "name": "majibill",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "demo-app/frontend",
+    "demo-app/backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @majibill/demo-frontend -- --host 127.0.0.1",
+    "build": "npm run build --workspaces",
+    "preview": "npm run preview --workspace @majibill/demo-frontend -- --host 127.0.0.1",
+    "api": "npm run start:dev --workspace @majibill/demo-backend",
+    "test": "node --test demo-app/frontend/tests/*.test.js",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
