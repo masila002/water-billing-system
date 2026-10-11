@@ -13,7 +13,8 @@
     "preview": "npm run preview --workspace @majibill/demo-frontend -- --host 127.0.0.1",
     "api": "npm run start:dev --workspace @majibill/demo-backend",
     "test": "node --test demo-app/frontend/tests/*.test.js",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:integration": "npm run test:integration --workspace @majibill/demo-backend"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0"

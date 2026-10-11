@@ -34,6 +34,7 @@ npm run build                  # Vite frontend + TypeScript NestJS backend
 npm test                       # Financial, role and persistence regressions
 npx playwright install chromium # First browser test setup
 npm run test:e2e                # Complete journey + mobile + failure recovery
+npm run test:integration        # Real API against a disposable PostgreSQL (needs Docker)
 ```
 
 Browser evidence is generated under `test-results/` (ignored by Git). The root npm workspace and lockfile are authoritative; run installation from this directory.
@@ -41,6 +42,8 @@ Browser evidence is generated under `test-results/` (ignored by Git). The root n
 [GitHub Actions](https://github.com/masila002/water-billing-system/actions/workflows/verify.yml) runs `npm ci`, both builds, domain tests and Chromium browser tests for every pull request and push to `main`. It uses Node.js 22 on Ubuntu 24.04, with a 15-minute job limit and a five-minute browser-suite limit. A newer run for the same branch or pull request cancels the previous run. Fork pull requests may need a maintainer to approve their first workflow run.
 
 On failure, available browser traces, screenshots and the HTML report are uploaded as `browser-failure-diagnostics` for seven days. Early installation or build failures may have no browser artifacts; use the job logs. The workflow uses a read-only repository token and requires no application secrets or database. These checks cover the local demo; they do not verify PostgreSQL integration or production readiness.
+
+`npm run test:integration` starts a disposable `postgres:16-alpine` container on loopback, provisions a restricted application role plus the schema and a fictional two-tenant fixture, then exercises the real API: the supported customer-to-paid-bill path, tenant isolation, idempotent replays, a five-way payment race, rollback atomicity and negative validation. Only fictional `mb-test-*` records are used; the harness refuses non-loopback targets and tears down only the database and container it created. A second CI job runs the same suite against a disposable database service and fails when Docker is unavailable. Characterization findings (backdated readings, overlapping periods, duplicate meters, reference scope, list balance fields, timezone-sensitive bill replay) are documented in the release notes below, not repaired here.
 
 ## Project structure
 

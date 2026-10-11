@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
-    "start:dev": "ts-node src/main.ts"
+    "start:dev": "ts-node src/main.ts",
+    "test:integration": "node test/integration/harness.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
