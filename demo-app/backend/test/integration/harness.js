@@ -8,7 +8,7 @@ const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { startScratchPostgres } = require('./disposable-db');
+const { startScratchPostgres, containerLogs } = require('./disposable-db');
 const { provisionServer } = require('./provision');
 const { applyFixture } = require('./fixture');
 const { startApi } = require('./api');
@@ -78,7 +78,15 @@ async function main() {
   let completed = false;
   try {
     console.log('backend-integration: provisioning roles, database and schema');
-    provisioned = await provisionServer(server);
+    try {
+      provisioned = await provisionServer(server);
+    } catch (error) {
+      // Server-side evidence: postmaster may still be starting or crash
+      // looping while the host port already accepts TCP.
+      console.error(`backend-integration: container logs for ${server.name}:`);
+      console.error(await containerLogs(server.name));
+      throw error;
+    }
     console.log(`backend-integration: test database ${provisioned.dbName} ready (credentials withheld)`);
 
     console.log('backend-integration: applying two-tenant fixture');

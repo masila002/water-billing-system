@@ -142,4 +142,14 @@ async function startScratchPostgres({ port }) {
   };
 }
 
-module.exports = { startScratchPostgres, SCRATCH_IMAGE: IMAGE };
+// Server-side evidence for bootstrap failures: tails the named container's
+// own logs (postmaster state, crash loop). Read-only, single container.
+async function containerLogs(name, tail = 30) {
+  try {
+    return await run('docker', ['logs', '--tail', String(tail), name]);
+  } catch (error) {
+    return `(container logs unavailable: ${error.message.split('\n')[0]})`;
+  }
+}
+
+module.exports = { startScratchPostgres, containerLogs, SCRATCH_IMAGE: IMAGE };
