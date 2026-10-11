@@ -6,10 +6,11 @@ product; `demo-app/` is the pitch demo. They share nothing at runtime.
 - **Team start:** [Team guide](docs/TEAM-GUIDE.md) (demo vs real, why split,
   how to host each) → [Dev manual](docs/DEV-MANUAL.md) (spin up everything)
   → [Production map](docs/PRODUCTION.md) → [Decisions](docs/system-design/).
-- **Demo (pitch):** `npm run dev` → http://127.0.0.1:3000. No database.
-  See [demo runbook](docs/DEMO-RUNBOOK.md).
-- **MajiBill (real):** `docker compose up -d` → API http://127.0.0.1:4000.
-  Needs Postgres + Redis. See [dev manual](docs/DEV-MANUAL.md).
+- **MajiBill (real):** `npm run dev` → staff console http://127.0.0.1:3001.
+  `npm run dev:api` → core API http://127.0.0.1:4000 (needs Postgres + Redis).
+  See [dev manual](docs/DEV-MANUAL.md).
+- **Demo (pitch):** `npm run demo` → http://127.0.0.1:3000. No database.
+  See [demo runbook](docs/DEMO-RUNBOOK.md) and [demo-app/](demo-app/README.md).
 
 ```text
 apps/api/       MajiBill core API (NestJS modular monolith)
@@ -24,14 +25,31 @@ tests/          Browser verification for the demo
 ```
 
 
-## Run the demo
+## Run MajiBill (the real app)
 
-Requires Node.js 22+ and npm. From this repository:
+Requires Node.js 22+, npm and Docker. From this repository:
 
 ```bash
 npm install
-npm run dev
+cp -n .env.example .env        # once; set POSTGRES_PASSWORD
+docker compose up -d           # majibill-postgres :5434 + majibill-redis :6381
+DATABASE_URL=postgres://majibill:<pw>@127.0.0.1:5434/majibill node db/migrate.js
+npm run dev                    # staff console → http://127.0.0.1:3001
+npm run dev:api                # core API → http://127.0.0.1:4000
 ```
+
+`npm run build` builds core-api + domain + staff-web. `npm test` runs
+the 14 production domain tests. Full reference: [dev manual](docs/DEV-MANUAL.md).
+
+## Run the demo (pitch, isolated)
+
+```bash
+npm run demo                   # Vite dashboard → http://127.0.0.1:3000
+```
+
+Demo env is sealed: `demo-app/.env` (`DEMO_DATABASE_URL`, port 4001)
+is the only file the demo reads — the root `.env` (real database) is
+never loaded, and the demo refuses to boot against `:5434/majibill`.
 
 Open **http://127.0.0.1:3000**, choose **Administrator**, and enter the demo workspace. No database, account, password or payment credentials are required. After dependencies are installed, the local app needs no internet access. Browser storage must be enabled.
 
@@ -49,14 +67,17 @@ The six fictional customers and their bills are ready for presentation. Your cha
 
 Follow [the seven-minute pitch](docs/DEMO-RUNBOOK.md). See [architecture and limitations](docs/ARCHITECTURE.md) and [pilot readiness](docs/PILOT-READINESS.md).
 
-## Verify
+## Verify (MajiBill first, demo namespaced)
 
 ```bash
-npm run build                  # Vite frontend + TypeScript NestJS backend
-npm test                       # Financial, role and persistence regressions
+npm run build                  # MajiBill: core-api + domain + staff-web
+npm test                       # MajiBill domain suite (14 tests)
+npm run gates                  # RLS catalog, contracts, inspo, secrets, compose
+npm run demo:build             # demo frontend + backend (isolated)
+npm run demo:test              # demo domain suite (13 tests)
 npx playwright install chromium # First browser test setup
-npm run test:e2e                # Complete journey + mobile + failure recovery
-npm run test:integration        # Real API against a disposable PostgreSQL (needs Docker)
+npm run demo:e2e               # demo journey + mobile + failure recovery
+npm run test:integration        # demo legacy API vs disposable PostgreSQL (needs Docker)
 ```
 
 Browser evidence is generated under `test-results/` (ignored by Git). The root npm workspace and lockfile are authoritative; run installation from this directory.
@@ -84,6 +105,6 @@ The original [demo blueprint](DEMO_BLUEPRINT.md) is retained as historical plann
 
 ## Optional local database integration
 
-The existing NestJS/PostgreSQL path is retained. See [API setup](demo-app/backend/README.md) and [database setup](demo-app/database/README.md). Start it with `npm run api`, then choose **Local API integration** in workspace settings. That mode retains customer/bill/account/payment lists and existing customer/payment forms. New demo-only workflow controls remain in local demo mode until the backend contract is expanded and verified.
+The existing NestJS/PostgreSQL path is retained. See [API setup](demo-app/backend/README.md) and [database setup](demo-app/database/README.md). Start it with `npm run demo:api`, then choose **Local API integration** in workspace settings. That mode retains customer/bill/account/payment lists and existing customer/payment forms. New demo-only workflow controls remain in local demo mode until the backend contract is expanded and verified.
 
 The API trusts a supplied tenant header and has no authenticated identity or role enforcement. Use fictional local data only. Database integration is not covered by the browser demo tests. No public deployment is configured or performed.

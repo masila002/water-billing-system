@@ -32,3 +32,7 @@ Only the operator sets `approved`. Superseded rows stay.
 | D-026 | TOTP staff now OTP stubbed | sessions/jwt, now/later, shared/per-file, session/body | chosen per spec 02 §13 | alternative: see §13 | medium | SDR-002 | operator | proposed | |
 | D-027 | shared can() policy module | sessions/jwt, now/later, shared/per-file, session/body | chosen per spec 02 §13 | alternative: see §13 | medium | SDR-002 | operator | proposed | |
 | D-028 | tenant from session+membership | sessions/jwt, now/later, shared/per-file, session/body | chosen per spec 02 §13 | alternative: see §13 | medium | SDR-002 | operator | proposed | |
+| D-029 | root dev = staff-web :3001 | web/api/demo, prefix/keep, 3001/3000, names/alias | chosen per spec 03 §13 | alternative: see §13 | low | SDR-007 | operator | proposed | |
+| D-030 | demo scripts namespaced demo:* | web/api/demo, prefix/keep, 3001/3000, names/alias | chosen per spec 03 §13 | alternative: see §13 | low | SDR-007 | operator | proposed | |
+| D-031 | web port 3001, demo keeps 3000 | web/api/demo, prefix/keep, 3001/3000, names/alias | chosen per spec 03 §13 | alternative: see §13 | low | SDR-007 | operator | proposed | |
+| D-032 | infra scripts use real service names | web/api/demo, prefix/keep, 3001/3000, names/alias | chosen per spec 03 §13 | alternative: see §13 | low | SDR-007 | operator | proposed | |
