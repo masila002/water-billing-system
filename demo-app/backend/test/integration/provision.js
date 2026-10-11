@@ -26,6 +26,30 @@ function adminUrl({ host, port, superUser, superPassword }, db = 'postgres') {
   return `postgresql://${superUser}:${encodeURIComponent(superPassword)}@${host}:${port}/${db}`;
 }
 
+// Postmaster startup can still reset the first client connects after the
+// port accepts TCP. Retry transient refuses/resets briefly, then fail loudly.
+async function connectWithRetry(connectionString, label) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= 10; attempt += 1) {
+    const client = new Client({ connectionString });
+    try {
+      await client.connect();
+      return client;
+    } catch (error) {
+      lastError = error;
+      try {
+        await client.end();
+      } catch {
+        // ignore cleanup of a failed connect
+      }
+      if (!['ECONNREFUSED', 'ECONNRESET'].includes(error.code)) throw error;
+      if (attempt === 10) break;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+  throw new Error(`${label} failed after retries: ${lastError.message}`);
+}
+
 async function provisionServer(server) {
   const stamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
   const dbName = `${DB_PREFIX}${stamp}_${process.pid}`;
@@ -33,9 +57,9 @@ async function provisionServer(server) {
   quoteIdent(APP_ROLE);
   const appPassword = randomBytes(24).toString('hex');
 
-  const admin = new Client({ connectionString: adminUrl(server) });
-  await admin.connect();
+  const admin = await connectWithRetry(adminUrl(server), 'bootstrap connection');
   try {
+    console.log('backend-integration: creating restricted role and test database');
     await admin.query(`DROP ROLE IF EXISTS ${quoteIdent(APP_ROLE)}`);
     await admin.query(
       `CREATE ROLE ${quoteIdent(APP_ROLE)} LOGIN PASSWORD ${quoteLiteral(appPassword)}`,
@@ -49,15 +73,16 @@ async function provisionServer(server) {
     `postgresql://${APP_ROLE}:${encodeURIComponent(appPassword)}` +
     `@${server.host}:${server.port}/${dbName}`;
 
-  const db = new Client({ connectionString: adminUrl(server, dbName) });
-  await db.connect();
+  const db = await connectWithRetry(adminUrl(server, dbName), 'test-database connection');
   try {
     // Kept for pre-13 servers; PostgreSQL 13+ provides gen_random_uuid()
     // in core (verified on postgres:16-alpine). Harmless either way.
+    console.log('backend-integration: creating extension and applying schema');
     await db.query('CREATE EXTENSION IF NOT EXISTS pgcrypto');
     const schemaPath = path.resolve(__dirname, '..', '..', '..', 'database', 'schema', '001_initial.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
     await db.query(schema);
+    console.log('backend-integration: granting restricted role privileges');
     await db.query(`GRANT CONNECT ON DATABASE ${quoteIdent(dbName)} TO ${quoteIdent(APP_ROLE)}`);
     await db.query(`GRANT USAGE ON SCHEMA public TO ${quoteIdent(APP_ROLE)}`);
     await db.query(
@@ -80,8 +105,7 @@ async function provisionServer(server) {
     adminDbUrl: adminUrl(server, dbName),
     // NOTE: test-only ephemeral credential; env-only, never logged.
     async deprovision() {
-      const killer = new Client({ connectionString: adminUrl(server) });
-      await killer.connect();
+      const killer = await connectWithRetry(adminUrl(server), 'deprovision connection');
       try {
         await killer.query(
           `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()`,
