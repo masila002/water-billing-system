@@ -1,4 +1,4 @@
-# Conventions — MAJIBILL (Griot-style layers)
+# Conventions — MAJIBILL (layer rules)
 
 - Controllers thin: validate (Zod), authn/z, call exactly one use case.
 - Services own the transaction; domain is pure (no I/O, no HTTP, no SQL).

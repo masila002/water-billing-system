@@ -75,13 +75,12 @@ npm test                 # 14 production domain tests
 
 Full command reference: [dev manual](DEV-MANUAL.md).
 Port map: staff web :3001 (real app) · demo Vite :3000 · MajiBill API
-:4000 · MajiBill Postgres :5434 · MajiBill Redis :6381. Griot's
+:4000 · MajiBill Postgres :5434 · MajiBill Redis :6381. Neighbouring
 5433/6380 and the defaults are never touched.
 
-## 4. Where work goes (Griot-style layers)
+## 4. Where work goes (MajiBill layers)
 
-MajiBill mirrors the proven Griot layering so Baseline can architect
-each slice cleanly:
+MajiBill's layering keeps every slice clean:
 
 ```text
 apps/api/src/
@@ -104,7 +103,7 @@ docs/trackers/        # per-area live task lists + evidence
 project-kit/          # brief, environments, commands, conventions
 ```
 
-Rules (same as Griot): controllers thin; domain pure; every tenant
+Rules: controllers thin; domain pure; every tenant
 table has `tenant_id` + forced RLS + composite keys; tenant id comes
 from the session, never the body; audit row in the same transaction;
 idempotency key on every retryable write; no new language without an
@@ -117,7 +116,7 @@ ADR.
   green, migrations apply on a fresh container, RLS catalog clean,
   new matrix cells tested, `docker compose config -q` clean.
 
-## 6. Area gates (Griot-style: verify before trusting)
+## 6. Area gates (verify before trusting)
 
 | Area | Path | Gate | Tracker |
 |---|---|---|---|

@@ -1,6 +1,6 @@
 # MajiBill project kit
 
-Griot-style area notes for agents and humans. Baseline's private
+Area notes for agents and humans. Baseline's private
 workspace (`.baseline/project-kit/`) keeps workflow state; this public
 kit keeps product truth.
 

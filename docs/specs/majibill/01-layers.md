@@ -56,7 +56,7 @@ Auth 10/min/IP + lockout; reads 300/min/user; writes 60/min/user;
 webhooks 600/min/source; exports 5/hour/user.
 ## 7. Failure modes and edge cases
 Partial migrate → forward-only fix, never edit applied file. Port
-collision → 5434/6381 reserved; Griot 5433/6380 untouched. Offline
+collision → 5434/6381 reserved; neighbouring 5433/6380 untouched. Offline
 reader → queue, never silent drop. Provider down → inbox suspense +
 retry. Secret in repo → rotate + purge + guard test.
 
@@ -80,7 +80,7 @@ error with retry, success. Offline is an error with queued badge.
 Searched: demo-app/backend (NestJS services, RLS middleware, money
 math) — reused patterns for tenant txn, idempotency, bill math;
 demo-app/database schema — superseded by db/migrations (UUIDv7 plan,
-memberships, inbox, ledger, outbox added). Griot docs pattern —
+memberships, inbox, ledger, outbox added). Layer docs pattern —
 mirrored for compose, ops manual, gates, trackers (not code).
 Nothing copied verbatim; no shared runtime.
 

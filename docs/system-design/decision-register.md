@@ -36,3 +36,10 @@ Only the operator sets `approved`. Superseded rows stay.
 | D-030 | demo scripts namespaced demo:* | web/api/demo, prefix/keep, 3001/3000, names/alias | chosen per spec 03 §13 | alternative: see §13 | low | SDR-007 | operator | proposed | |
 | D-031 | web port 3001, demo keeps 3000 | web/api/demo, prefix/keep, 3001/3000, names/alias | chosen per spec 03 §13 | alternative: see §13 | low | SDR-007 | operator | proposed | |
 | D-032 | infra scripts use real service names | web/api/demo, prefix/keep, 3001/3000, names/alias | chosen per spec 03 §13 | alternative: see §13 | low | SDR-007 | operator | proposed | |
+| D-033 | pointer dirs keep README-only | keep/delete/symlink | keep README pointers, zero code | delete breaks external tooling; symlinks fragile | low | SDR-007 | operator | proposed | |
+| D-034 | domain .js removal import fix | dist-first/ts-loader/keep-js | point tests at dist/ output | ts-loader adds dep; keep-js keeps drift (sessions export mismatch) | low | SDR-007 | operator | proposed | |
+| D-035 | .next/ ignore location | root/per-app/leave | root .gitignore entry | leave repeats noise; per-app scatters rule | low | SDR-009 | operator | proposed | |
+| D-036 | project-kit vs .baseline split | keep/merge | keep split (public truth vs private state) | merge leaks workflow or pollutes kit | low | SDR-001 | operator | proposed | |
+| D-037 | db/ vs demo-app/database/ | keep/merge | keep both (prod RLS vs pitch seed) | merge couples pilot to fiction | low | SDR-008 | operator | proposed | |
+| D-038 | devops/ vs infra/ | keep/merge | keep both (cells path vs runnable topology) | merge mixes now with future | low | SDR-009 | operator | proposed | |
+| D-039 | qa/ location | root/move-to-api | stays root (cross-layer proofs) | move hides scope in one app | low | SDR-001 | operator | proposed | |

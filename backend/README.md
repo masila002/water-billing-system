@@ -1,5 +1,5 @@
-# MajiBill backend — `apps/api` is the product backend (Griot: `backend/`)
+# MajiBill backend — `apps/api` is the product backend
 
 NestJS 10 modular monolith, sole DB writer. `backend/` is a
-compatibility pointer for Griot-shaped tooling; all code lives in
+compatibility pointer; all code lives in
 `apps/api/`. See `apps/api/AGENTS.md`.

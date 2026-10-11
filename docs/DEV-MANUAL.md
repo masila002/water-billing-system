@@ -48,7 +48,7 @@ docker compose logs -f majibill-api          # tail the API
 docker compose --profile app down            # back to stores-only
 ```
 
-## 3. Database work (SQL-first, Griot-style)
+## 3. Database work (SQL-first)
 
 ```bash
 # Apply migrations in order (idempotent per file, forward-only)
@@ -109,7 +109,7 @@ docker compose down -v                 # DESTROYS local pgdata — dev only
 docker compose up -d && DATABASE_URL=... node db/migrate.js   # rebirth
 ```
 
-Griot's `griot-*` containers (5433/6380) and the old `docker_*`
+Unrelated `*-containers` on neighbouring ports and the old `docker_*`
 project are unrelated — leave them running.
 
 ## 6. Port map (never collide)
@@ -121,8 +121,8 @@ project are unrelated — leave them running.
 | MajiBill API | http://127.0.0.1:4000 | `npm run dev:api` / compose `app` |
 | MajiBill Postgres | 127.0.0.1:5434 | `majibill-majibill-postgres-1` |
 | MajiBill Redis | 127.0.0.1:6381 | `majibill-majibill-redis-1` |
-| Griot Postgres | 127.0.0.1:5433 | other project, do not stop |
-| Griot Redis | 127.0.0.1:6380 | other project, do not stop |
+| Other-project Postgres | 127.0.0.1:5433 | other project, do not stop |
+| Other-project Redis | 127.0.0.1:6380 | other project, do not stop |
 
 ## 7. Troubleshooting
 
