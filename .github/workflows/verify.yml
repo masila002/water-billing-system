@@ -87,3 +87,10 @@ jobs:
         # provisions restricted roles plus schema, and exercises the real
         # API. Fails when Docker is unavailable; never skips silently.
         run: npm run test:integration
+
+      - name: Run backend integration tests under Africa/Nairobi time
+        # Regression guard for timezone-sensitive date handling (bill
+        # replay compares calendar days). Same suite, non-UTC runtime.
+        run: npm run test:integration
+        env:
+          MB_TEST_TZ: Africa/Nairobi

@@ -8,10 +8,6 @@ import { randomUUID } from 'node:crypto';
 import { DatabaseService } from '../database/database.service';
 import { GenerateBillDto } from '../dto/generate-bill.dto';
 
-function toIsoDate(value: string | Date): string {
-  return new Date(value).toISOString().slice(0, 10);
-}
-
 @Injectable()
 export class BillingService {
   constructor(private readonly database: DatabaseService) {}
@@ -45,24 +41,31 @@ export class BillingService {
         `SELECT id, bill_number AS "billNumber", service_account_id AS "serviceAccountId",
                 period_start AS "periodStart", period_end AS "periodEnd",
                 due_at AS "dueAt", status, subtotal_minor AS "subtotalMinor",
-                total_minor AS "totalMinor", issued_at AS "issuedAt"
+                total_minor AS "totalMinor", issued_at AS "issuedAt",
+                period_start::text AS "periodStartDay", period_end::text AS "periodEndDay",
+                due_at::text AS "dueAtDay"
            FROM bills
           WHERE tenant_id = $1 AND meter_reading_id = $2`,
         [tenantId, input.meterReadingId],
       );
       if (previouslyGenerated.rowCount) {
         const saved = previouslyGenerated.rows[0];
+        // DATE columns are compared as ISO calendar text: node-pg builds
+        // DATE values at local midnight, so UTC-day extraction shifts the
+        // day on runtimes east of UTC (F04). Text comparison is exact on
+        // every runtime; the returned row keeps its original shape.
         if (
           saved.serviceAccountId !== input.serviceAccountId ||
-          toIsoDate(saved.periodStart) !== input.periodStart ||
-          toIsoDate(saved.periodEnd) !== input.periodEnd ||
-          toIsoDate(saved.dueAt) !== input.dueAt
+          saved.periodStartDay !== input.periodStart ||
+          saved.periodEndDay !== input.periodEnd ||
+          saved.dueAtDay !== input.dueAt
         ) {
           throw new ConflictException(
             'This meter reading has already been billed with different details',
           );
         }
-        return saved;
+        const { periodStartDay, periodEndDay, dueAtDay, ...replay } = saved;
+        return replay;
       }
 
       const source = await client.query<{

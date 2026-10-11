@@ -45,6 +45,8 @@ On failure, available browser traces, screenshots and the HTML report are upload
 
 `npm run test:integration` starts a disposable `postgres:16-alpine` container on loopback, provisions a restricted application role plus the schema and a fictional two-tenant fixture, then exercises the real API: the supported customer-to-paid-bill path, tenant isolation, idempotent replays, a five-way payment race, rollback atomicity and negative validation. Only fictional `mb-test-*` records are used; the harness refuses non-loopback targets and tears down only the database and container it created. A second CI job runs the same suite against a disposable database service and fails when Docker is unavailable. Characterization findings (backdated readings, overlapping periods, duplicate meters, reference scope, list balance fields, timezone-sensitive bill replay) are documented in the release notes below, not repaired here.
 
+Set `MB_TEST_TZ` (for example `Africa/Nairobi`) to run the integration suite under a non-UTC runtime; unknown zones fail loudly. CI runs the suite under both UTC and Africa/Nairobi.
+
 ## Project structure
 
 ```text
