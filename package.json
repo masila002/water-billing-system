@@ -1,18 +1,27 @@
 {
   "name": "majibill",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "workspaces": [
     "demo-app/frontend",
-    "demo-app/backend"
+    "demo-app/backend",
+    "apps/api",
+    "apps/web",
+    "apps/reader",
+    "packages/domain",
+    "packages/contracts"
   ],
   "scripts": {
     "dev": "npm run dev --workspace @majibill/demo-frontend -- --host 127.0.0.1",
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace @majibill/demo-frontend && npm run build --workspace @majibill/demo-backend",
+    "build:production": "npm run build --workspace @majibill/core-api && npm run build --workspace @majibill/domain",
     "preview": "npm run preview --workspace @majibill/demo-frontend -- --host 127.0.0.1",
     "api": "npm run start:dev --workspace @majibill/demo-backend",
+    "api:production": "npm run start:dev --workspace @majibill/core-api",
+    "db:migrate": "node db/migrate.js",
     "test": "node --test demo-app/frontend/tests/*.test.js",
+    "test:production": "node --test packages/domain/test/*.test.js",
     "test:e2e": "playwright test",
     "test:integration": "npm run test:integration --workspace @majibill/demo-backend"
   },
