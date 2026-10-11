@@ -1,6 +1,6 @@
 # SDR-003 — audit trail
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: Secure-by-design audit; Data L2 append-only

@@ -1,6 +1,6 @@
 # SDR-007 — stack (the real build)
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: WCSEA decision matrix + summary; Backend §33;

@@ -1,6 +1,6 @@
 # SDR-001 (part 2) — contracts, clients, budgets, path
 
-Status: proposed
+Status: approved
 Depends on: SDR-001-overview §1-5
 
 ## 6. Contracts and API surface

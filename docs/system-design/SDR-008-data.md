@@ -1,6 +1,6 @@
 # SDR-008 — data, migrations, files
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: Data volume; MB-04 schema

@@ -1,6 +1,6 @@
 # SDR-005 — scaling (12mo and 10x)
 
-Status: proposed
+Status: approved
 Owner: operator
 Depends on: SDR-001
 KB refs: WCSEA scaling; MB-13 playbook

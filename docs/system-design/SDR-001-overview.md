@@ -1,6 +1,6 @@
 # SDR-001 — MajiBill production overview (phased pilot v1)
 
-Status: proposed
+Status: approved
 Owner: operator
 KB refs: WCSEA §2.3; Multi-tenant §2; Backend §33; Mobile §28; LPIP §1-4
 
