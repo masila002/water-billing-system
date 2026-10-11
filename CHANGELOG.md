@@ -4,7 +4,7 @@
 
 - Added isolated backend verification: `npm run test:integration` proves the NestJS API and PostgreSQL schema against a disposable loopback database (23 checks: supported money path, tenant isolation, replays, payment race, rollback, negative cases).
 - Added a CI integration job running the same suite; it fails when Docker is unavailable and never skips silently.
-- Characterized, not repaired: bootstrap creates the `pgcrypto` extension (redundant on PostgreSQL 13+, kept for older servers); backdated chained readings pass; overlapping bill periods pass; meter numbers are not unique; list responses carry no computed balances; payment references are unique per method.
+- Characterized, not repaired: backdated chained readings pass; overlapping bill periods pass; meter numbers are not unique; list responses carry no computed balances; payment references are unique per method.
 - Fixed timezone-sensitive bill replay: identical replays compared DATE columns through local-time construction and wrongly returned 409 on runtimes east of UTC; replay now compares ISO calendar-day text. The integration suite runs under UTC and Africa/Nairobi in CI.
 
 - Added GitHub Actions verification for pull requests and `main`: locked dependency installation, both application builds, domain tests and Chromium browser tests on Node.js 22.

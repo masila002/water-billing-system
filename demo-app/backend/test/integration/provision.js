@@ -80,10 +80,9 @@ async function provisionServer(server) {
 
   const db = await connectWithRetry(adminUrl(server, dbName), 'test-database connection');
   try {
-    // Kept for pre-13 servers; PostgreSQL 13+ provides gen_random_uuid()
-    // in core (verified on postgres:16-alpine). Harmless either way.
-    console.log('backend-integration: creating extension and applying schema');
-    await db.query('CREATE EXTENSION IF NOT EXISTS pgcrypto');
+    // gen_random_uuid() is core since PostgreSQL 13 (verified on
+    // postgres:16-alpine with no extension installed); no extension needed.
+    console.log('backend-integration: applying schema');
     const schemaPath = path.resolve(__dirname, '..', '..', '..', 'database', 'schema', '001_initial.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
     await db.query(schema);
