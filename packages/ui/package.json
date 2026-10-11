@@ -1,0 +1,7 @@
+{
+  "name": "@majibill/ui",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "typecheck": "tsc --noEmit -p tsconfig.json" },
+  "devDependencies": { "typescript": "^5.7.2" }
+}

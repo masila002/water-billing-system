@@ -1,11 +1,12 @@
 # MajiBill root tracker
 
 ## 0. Next
-Foundation merged (PR #10, D-001..D-012 approved). Branch
-`feature/production/02-identity` carries: docs SDR approval flips,
-Griot-style root compose, team guide, dev manual, project-kit, area
-gates + trackers. Next: identity slice (sessions/OTP/RBAC/manifest),
-then customer→bill vertical, inbox + posting, sync.
+Slices 01-02 merged (PR #10 foundation, PR #11 layers-infra-docs).
+Branch `feature/production/03-layers` carries spec 01
+(docs/specs/majibill/01-layers.md, Proposed) + all 12 layer
+scaffolds + gate scripts + D-013..D-024 (proposed; merge approves).
+After merge: identity code slice, customer→bill vertical, inbox +
+posting, sync. Demo stays isolated.
 
 ## 1. Status
 | Slice | State | Evidence |

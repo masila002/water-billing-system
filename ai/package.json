@@ -1,0 +1,17 @@
+{
+  "name": "@majibill/ai-workers",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "bullmq": "6.3.12",
+    "ioredis": "6.0.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

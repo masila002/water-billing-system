@@ -16,3 +16,15 @@ Only the operator sets `approved`. Superseded rows stay.
 | D-010 | Deploy v1 | compose pilot, K8s now, PaaS only | compose + same artifact | K8s: ops load without need | medium | WCSEA §4 | operator | approved | PR #10 2026-10-11 |
 | D-011 | Analytics/ingress | now vs on-trigger | on-trigger (Go/Py later) | now: 3 chains to review/operate | medium | MB-01 §5 | operator | approved | PR #10 2026-10-11 |
 | D-012 | Scope v1 | phased pilot, full platform | phased (API+web+mobile) | full: console/portal/extracts day one | medium | operator choice | operator | approved | PR #10 2026-10-11 |
+| D-013 | backend monolith NestJS | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-014 | staff web Next.js | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-015 | reader Expo RN | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-016 | Postgres SQL-first RLS | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-017 | Redis+BullMQ | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-018 | compose pilot same-image | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-019 | md-in-repo docs | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-020 | scripts gates | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-021 | disposable qa | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-022 | MCP over REST OBO | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-023 | BullMQ workers now | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
+| D-024 | inspo public-safe | build-vs-buy | chosen per spec 01 §13 | alternative: see §13 | low-medium | SDR-007 | operator | proposed | |
