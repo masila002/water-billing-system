@@ -1,6 +1,6 @@
 # Scope 01 — MajiBill production layers (Griot-mirror)
 
-Status: proposed
+Status: approved
 SDRs: SDR-001, SDR-002, SDR-003, SDR-004, SDR-005, SDR-006, SDR-007, SDR-008, SDR-009, SDR-010
 Delivery style: skateboard (each layer builds and gates alone, composes into the platform)
 Default depth: beta
