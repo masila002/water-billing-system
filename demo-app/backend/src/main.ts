@@ -12,7 +12,7 @@ if (existsSync(DEMO_ENV_FILE)) {
   config({ path: DEMO_ENV_FILE });
 }
 
-const REAL_DB_MARKERS = [':5434', '/majibill', 'majibill-postgres'];
+const REAL_DB_MARKERS = [':5434', 'majibill-postgres'];
 
 function resolveDemoDatabaseUrl(): string {
   const url = process.env.DEMO_DATABASE_URL ?? process.env.DATABASE_URL;
