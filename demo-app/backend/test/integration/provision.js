@@ -26,11 +26,17 @@ function adminUrl({ host, port, superUser, superPassword }, db = 'postgres') {
   return `postgresql://${superUser}:${encodeURIComponent(superPassword)}@${host}:${port}/${db}`;
 }
 
-// Postmaster startup can still reset the first client connects after the
-// port accepts TCP. Retry transient refuses/resets briefly, then fail loudly.
-async function connectWithRetry(connectionString, label) {
+// Postmaster startup on CI runners can still tear down the first client
+// handshakes after the port accepts TCP (observed: ECONNRESET and
+// "Connection terminated unexpectedly" within milliseconds of readiness).
+// Retry any connect failure through the startup window, then fail loudly
+// with the last error.
+async function connectWithRetry(connectionString, label, budgetMs = 30_000) {
+  const start = Date.now();
   let lastError = null;
-  for (let attempt = 1; attempt <= 10; attempt += 1) {
+  let attempt = 0;
+  for (;;) {
+    attempt += 1;
     const client = new Client({ connectionString });
     try {
       await client.connect();
@@ -42,12 +48,11 @@ async function connectWithRetry(connectionString, label) {
       } catch {
         // ignore cleanup of a failed connect
       }
-      if (!['ECONNREFUSED', 'ECONNRESET'].includes(error.code)) throw error;
-      if (attempt === 10) break;
+      if (Date.now() - start > budgetMs) break;
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
-  throw new Error(`${label} failed after retries: ${lastError.message}`);
+  throw new Error(`${label} failed after ${attempt} attempts: ${lastError.message}`);
 }
 
 async function provisionServer(server) {
