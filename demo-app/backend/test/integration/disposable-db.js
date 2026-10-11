@@ -56,6 +56,38 @@ async function waitReady(name, superUser, timeoutMs = 60_000) {
   }
 }
 
+// pg_isready inside the container does not prove the published host port
+// accepts connections yet (CI runners RST the first host-side connects
+// during postmaster startup). Verify host reachability before use.
+async function waitHostPort(host, port, timeoutMs = 60_000) {
+  const start = Date.now();
+  let lastError = null;
+  for (;;) {
+    try {
+      await new Promise((resolve, reject) => {
+        const socket = net.connect(port, host);
+        socket.once('connect', () => {
+          socket.destroy();
+          resolve();
+        });
+        socket.once('error', (error) => {
+          socket.destroy();
+          reject(error);
+        });
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (Date.now() - start > timeoutMs) {
+        throw new Error(
+          `Test PostgreSQL at ${host}:${port} never accepted host connections: ${lastError.message}`,
+        );
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+}
+
 async function startScratchPostgres({ port }) {
   if (!(await dockerAvailable())) {
     throw new Error(
@@ -87,6 +119,7 @@ async function startScratchPostgres({ port }) {
   ]);
   try {
     await waitReady(name, 'postgres');
+    await waitHostPort('127.0.0.1', port);
   } catch (error) {
     try {
       await run('docker', ['stop', name]);
