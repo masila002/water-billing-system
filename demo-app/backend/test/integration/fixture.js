@@ -44,11 +44,21 @@ async function applyFixture(appUrl) {
          RETURNING id`,
         [tenantId, `MBT-${key}-001`, `MB Test Customer ${key}`],
       );
+      await client.query(
+        `INSERT INTO audit_events (tenant_id, event_type, entity_type, entity_id, details)
+         VALUES ($1, 'customer.created', 'customer', $2, '{"fixture":true}'::jsonb)`,
+        [tenantId, customer.rows[0].id],
+      );
       const account = await client.query(
         `INSERT INTO service_accounts (tenant_id, customer_id, tariff_id, account_number, meter_number)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id`,
         [tenantId, customer.rows[0].id, tariff.rows[0].id, `MBT-ACC-${key}-001`, `MBT-MTR-${key}-001`],
+      );
+      await client.query(
+        `INSERT INTO audit_events (tenant_id, event_type, entity_type, entity_id, details)
+         VALUES ($1, 'service_account.created', 'service_account', $2, '{"fixture":true}'::jsonb)`,
+        [tenantId, account.rows[0].id],
       );
       context[`tariff${key}`] = tariff.rows[0].id;
       context[`user${key}`] = user.rows[0].id;

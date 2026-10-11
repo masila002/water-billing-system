@@ -44,7 +44,8 @@ async function waitHealth(baseUrl, timeoutMs = 30_000) {
   const start = Date.now();
   for (;;) {
     try {
-      const res = await fetch(`${baseUrl}/api/health`);
+      // S4: per-request deadline so a stalled listener cannot hang the poll.
+      const res = await fetch(`${baseUrl}/api/health`, { signal: AbortSignal.timeout(5000) });
       if (res.ok) {
         const body = await res.json();
         if (body && body.status === 'ok' && body.database === 'ok') return;
@@ -64,6 +65,7 @@ async function waitHealth(baseUrl, timeoutMs = 30_000) {
 async function assertTestDatabase(baseUrl, tenantId, customerId) {
   const res = await fetch(`${baseUrl}/api/customers`, {
     headers: { 'x-tenant-id': tenantId },
+    signal: AbortSignal.timeout(5000),
   });
   if (!res.ok) throw new Error(`Wrong-database probe failed with HTTP ${res.status}`);
   const rows = await res.json();
@@ -89,8 +91,13 @@ async function startApi({ databaseUrl, port, tenantId, customerId, logFile }) {
   const baseUrl = `http://127.0.0.1:${port}`;
   const stop = () => {
     log.end();
-    child.kill('SIGTERM');
     return new Promise((resolve) => {
+      // S3: subscribe before signalling, and resolve at once when the child
+      // already exited (Node never replays a fired `exit` event).
+      if (child.exitCode !== null || child.signalCode !== null) {
+        resolve();
+        return;
+      }
       const timer = setTimeout(() => {
         try {
           child.kill('SIGKILL');
@@ -103,14 +110,32 @@ async function startApi({ databaseUrl, port, tenantId, customerId, logFile }) {
         clearTimeout(timer);
         resolve();
       });
+      try {
+        child.kill('SIGTERM');
+      } catch {
+        // already exited between the check and the signal
+        clearTimeout(timer);
+        resolve();
+      }
     });
   };
   try {
     await waitHealth(baseUrl);
     await assertTestDatabase(baseUrl, tenantId, customerId);
   } catch (error) {
+    // S9: surface the startup log path and tail so CI output explains the cause.
+    let tail = '';
+    try {
+      const lines = require('node:fs').readFileSync(logFile, 'utf8').trimEnd().split('\n');
+      tail = lines.slice(-30).join('\n');
+    } catch {
+      tail = '(API log unavailable)';
+    }
     await stop();
-    throw error;
+    const annotated = new Error(
+      `${error instanceof Error ? error.message : String(error)}\nAPI stderr (${logFile}):\n${tail}`,
+    );
+    throw annotated;
   }
   return { baseUrl, stop };
 }

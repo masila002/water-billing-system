@@ -198,6 +198,34 @@ describe('replay and conflict behavior', () => {
     });
     assert.equal(conflict.status, 409);
   });
+  it('replays an identical payment without new rows; conflicting reuse fails', async () => {
+    // S8: payment idempotency shared the replay claim without a test.
+    const accounts = (await req('GET', '/api/accounts', C.tenantA)).body;
+    const accountId = accounts.find((a) => a.accountNumber === 'MBT-ACC-A-002').id;
+    const bills = (await req('GET', '/api/bills', C.tenantA)).body;
+    const billId = bills.find((b) => b.status === 'paid').id;
+    const listed = (await req('GET', '/api/payments', C.tenantA)).body;
+    const originalId = listed.find((p) => Number(p.amountMinor) === 25000 && p.method === 'cash').id;
+    const before = await countAllocations(billId, C.tenantA);
+    const payload = {
+      serviceAccountId: accountId,
+      billId,
+      amountMinor: 25000,
+      method: 'cash',
+      idempotencyKey: 'mbt-pay-a-002a',
+      recordedBy: C.userA,
+    };
+    const replay = await req('POST', '/api/payments', C.tenantA, payload);
+    assert.equal(replay.status, 201);
+    assert.equal(replay.body.id, originalId);
+    assert.deepEqual(await countAllocations(billId, C.tenantA), before);
+    const conflict = await req('POST', '/api/payments', C.tenantA, {
+      ...payload,
+      amountMinor: 25001,
+    });
+    assert.equal(conflict.status, 409);
+    assert.deepEqual(await countAllocations(billId, C.tenantA), before);
+  });
   it('replays an identical bill without new rows; conflicting reuse fails', async () => {
     const readings = (await req('GET', '/api/readings', C.tenantA)).body;
     const reading = readings.find((r) => r.accountNumber === 'MBT-ACC-A-001' && Number(r.consumption) === 5);
@@ -244,7 +272,10 @@ describe('tenant B isolation, rollback and concurrency', () => {
     assert.equal(BigInt(bill.body.totalMinor), 75000n);
     billB = bill.body.id;
   });
-  it('rolls back payment, allocation and audit together on late failure', async () => {
+  // S2: every HTTP-triggerable payment failure precedes the first write
+  // (recorded_by is validated at the payment INSERT), so this verifies
+  // atomic no-partial-state rather than mid-transaction rollback.
+  it('leaves no partial state when the payment write fails', async () => {
     const bad = await req('POST', '/api/payments', C.tenantB, {
       serviceAccountId: C.accountB,
       billId: billB,
