@@ -113,6 +113,11 @@ describe('tenant A happy path: customer to paid bill', () => {
     assert.equal(bill.status, 201);
     assert.equal(BigInt(bill.body.totalMinor), 75000n);
     assert.equal(BigInt(bill.body.subtotalMinor), 75000n);
+    // S1 (PR #7 review): bill dates travel as ISO calendar-day strings on
+    // every runtime, never runtime-shifted timestamps.
+    assert.equal(bill.body.periodStart, '2026-09-01');
+    assert.equal(bill.body.periodEnd, '2026-09-30');
+    assert.equal(bill.body.dueAt, '2026-10-15');
     billId = bill.body.id;
   });
   it('accepts a partial payment then the remainder and marks the bill paid', async () => {
@@ -241,6 +246,14 @@ describe('replay and conflict behavior', () => {
     const replay = await req('POST', '/api/bills/generate', C.tenantA, input);
     assert.equal(replay.status, 201);
     assert.equal(replay.body.id, first.body.id);
+    assert.equal(replay.body.periodStart, '2026-09-01');
+    assert.equal(replay.body.periodEnd, '2026-09-30');
+    assert.equal(replay.body.dueAt, '2026-10-15');
+    assert.deepEqual(
+      Object.keys(replay.body).sort(),
+      Object.keys(first.body).sort(),
+      'replay and first-generate responses share one shape',
+    );
     const conflict = await req('POST', '/api/bills/generate', C.tenantA, {
       ...input,
       periodEnd: '2026-10-31',
@@ -422,6 +435,9 @@ describe('characterization probes (current behavior, repaired separately)', () =
     assert.ok(bills.length >= 1);
     for (const b of bills) {
       assert.ok(!('remainingMinor' in b) && !('paidMinor' in b) && !('balanceMinor' in b));
+      assert.match(b.periodStart, /^\d{4}-\d{2}-\d{2}$/, 'list bill dates are ISO calendar-day strings');
+      assert.match(b.periodEnd, /^\d{4}-\d{2}-\d{2}$/, 'list bill dates are ISO calendar-day strings');
+      assert.match(b.dueAt, /^\d{4}-\d{2}-\d{2}$/, 'list bill dates are ISO calendar-day strings');
     }
     const accounts = (await req('GET', '/api/accounts', C.tenantA)).body;
     for (const a of accounts) {
