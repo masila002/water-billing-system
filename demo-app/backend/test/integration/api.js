@@ -26,15 +26,21 @@ function sanitizedEnv(databaseUrl, port) {
       delete env[key];
     }
   }
+  const requestedTz = process.env.MB_TEST_TZ ?? 'UTC';
+  // NB: Intl.supportedValuesOf('timeZone') omits the TZ-valid name 'UTC'.
+  if (requestedTz !== 'UTC' && !Intl.supportedValuesOf('timeZone').includes(requestedTz)) {
+    throw new Error(`Refusing unknown MB_TEST_TZ: ${requestedTz}`);
+  }
   return {
     ...env,
     DATABASE_URL: databaseUrl,
     PORT: String(port),
     HOST: '127.0.0.1',
-    // Pin UTC: billing replay compares DATE columns through local-time
-    // construction (CF-07). Non-UTC runtimes 409 on identical replays; the
-    // defect is characterized in the spec and repaired separately (F04).
-    TZ: 'UTC',
+    // Runtime timezone for the API process. UTC is the default; the F04
+    // regression runs Africa/Nairobi, where identical bill replays wrongly
+    // 409'd before the text-comparison fix. Pinned explicitly so ambient TZ
+    // can never change suite semantics by accident.
+    TZ: requestedTz,
     CORS_ORIGINS: `http://127.0.0.1:${port}`,
     DATABASE_POOL_MAX: '5',
   };
