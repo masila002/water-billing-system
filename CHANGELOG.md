@@ -2,11 +2,14 @@
 
 ## Unreleased
 
-- Added production foundation in root (phased pilot v1): NestJS core-API
-  skeleton, Next.js staff shell, Expo reader shell, domain tariff/RBAC
-  package with tests, SQL-first RLS migrations, local compose, OpenAPI
-  stub and production SDR-001..010 plus decision register (all proposed;
-  merge approves D-001..D-012). Demo in demo-app/ untouched.
+- Added MajiBill production layers scaffold (spec majibill/01, scope 01):
+  backend/web/mobile pointers + AGENTS, mcp/ + ai/ alpha stubs
+  (typecheck clean), qa/ plan, inspo/ + docs/inspo isolation,
+  devops/ cells path, packages/ui + packages/config, scripts gates
+  (rls/contract/inspo/secrets/compose) wired as `npm run gates`.
+  Retired infra/docker/compose.yaml (root compose is canonical).
+  Decisions D-013..D-024 proposed in register (merge approves).
+  Cost/tradeoffs/scaling/hosting per layer in spec §13.
 - Added isolated backend verification: `npm run test:integration` proves the NestJS API and PostgreSQL schema against a disposable loopback database (23 checks: supported money path, tenant isolation, replays, payment race, rollback, negative cases).
 - Added a CI integration job running the same suite; it fails when Docker is unavailable and never skips silently.
 - Characterized, not repaired: backdated chained readings pass; overlapping bill periods pass; meter numbers are not unique; list responses carry no computed balances; payment references are unique per method.

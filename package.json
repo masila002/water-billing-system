@@ -10,7 +10,11 @@
     "apps/web",
     "apps/reader",
     "packages/domain",
-    "packages/contracts"
+    "packages/contracts",
+    "packages/ui",
+    "packages/config",
+    "mcp",
+    "ai"
   ],
   "scripts": {
     "dev": "npm run dev --workspace @majibill/demo-frontend -- --host 127.0.0.1",
@@ -26,7 +30,13 @@
     "test": "node --test demo-app/frontend/tests/*.test.js",
     "test:production": "node --test packages/domain/test/*.test.js",
     "test:e2e": "playwright test",
-    "test:integration": "npm run test:integration --workspace @majibill/demo-backend"
+    "test:integration": "npm run test:integration --workspace @majibill/demo-backend",
+    "gate:rls": "python3 scripts/check-rls-catalog.py",
+    "gate:contracts": "python3 scripts/check-contract-sync.py",
+    "gate:inspo": "python3 scripts/check-inspo-isolation.py",
+    "gate:secrets": "python3 scripts/check-secret-literals.py",
+    "gate:compose": "docker compose config -q",
+    "gates": "npm run gate:rls && npm run gate:contracts && npm run gate:inspo && npm run gate:secrets && npm run gate:compose && git diff --check"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0"
