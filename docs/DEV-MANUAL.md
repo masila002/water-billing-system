@@ -1,5 +1,10 @@
 # MajiBill dev manual — spin up every server yourself
 
+> **Root takeover (spec 03, approved):** bare `npm run dev/build/test`
+> serve **MajiBill**. Demo commands are `demo`, `demo:build`,
+> `demo:test`, `demo:e2e`, `demo:api`. Port map: staff web :3001,
+> demo :3000, API :4000, Postgres :5434, Redis :6381.
+
 Every command runs from the repo root unless stated. Node 22+,
 Docker, `psql`/`redis-cli` clients assumed. Env var NAMES only;
 values live in your git-ignored `.env`.
@@ -8,28 +13,31 @@ values live in your git-ignored `.env`.
 
 ```bash
 cp -n .env.example .env        # then set POSTGRES_PASSWORD in .env
-npm install                    # root workspace (demo + MajiBill)
+npm install                    # root workspace (MajiBill + demo)
 docker compose up -d           # majibill-postgres :5434, majibill-redis :6381
 DATABASE_URL=postgres://majibill:<pw>@127.0.0.1:5434/majibill node db/migrate.js
+npm run dev                    # staff console → :3001 (the real app)
 ```
 
 Verify: `docker compose ps` shows both `healthy`;
 `pg_isready -h 127.0.0.1 -p 5434` accepts;
 `redis-cli -p 6381 ping` returns `PONG`;
 `GET http://127.0.0.1:4000/v1/health` returns service JSON
-(after §1 or §2).
+(after §1 or §2); `GET http://127.0.0.1:3001/` renders the
+MajiBill staff console.
 
-## 1. Everyday loop (recommended: API on your machine)
+## 1. Everyday loop (recommended)
 
 ```bash
 docker compose up -d                       # stores only
+npm run dev                                # staff web → :3001
 DATABASE_URL=postgres://majibill:<pw>@127.0.0.1:5434/majibill \
 REDIS_URL=redis://127.0.0.1:6381 \
 npm run dev:api                            # core API → :4000, hot reload
 ```
 
-Staff web and reader shells run separately when their slices land;
-today they are static shells (`apps/web`, `apps/reader`).
+Reader mobile (`apps/reader`) runs via Expo when its slice lands;
+today it is a shell with its own AGENTS.md.
 
 ## 2. Full stack in containers (parity check)
 
@@ -65,16 +73,32 @@ on a copy before they touch shared environments.
 ## 4. Verify gates (run before every push)
 
 ```bash
-npm run build:production     # core-api tsc + domain tsc
-npm run test:production      # domain tariff/RBAC suite (9 tests)
-npm run build                # demo frontend + backend untouched
-npm test                     # demo domain suite (13 tests)
+npm run build                # MajiBill: core-api + domain + staff-web
+npm test                     # MajiBill domain suite (14 tests)
+npm run gates                # RLS catalog, contracts, inspo, secrets, compose
+npm run demo:build           # demo frontend + backend (isolated)
+npm run demo:test            # demo domain suite (13 tests)
 docker compose config -q     # compose syntax clean
 git diff --check             # whitespace clean
 ```
 
-Browser + integration suites: `npm run test:e2e`,
-`npm run test:integration` (disposable containers, needs Docker).
+Browser + integration suites: `npm run demo:e2e`,
+`npm run test:integration` (demo legacy API vs disposable
+containers, needs Docker).
+
+## 4b. Demo (isolated, namespaced)
+
+```bash
+npm run demo                 # Vite dashboard → :3000
+npm run demo:build           # builds demo only
+npm run demo:test            # 13 tests
+npm run demo:e2e             # browser suite (:3100)
+npm run demo:api             # legacy demo API → :4001 explicit (demo-app/.env only)
+```
+
+Demo env is sealed: the demo backend loads `demo-app/.env`
+(`DEMO_DATABASE_URL`) by file path. The root `.env` is never read,
+and the demo refuses to boot against the real `:5434/majibill`.
 
 ## 5. Stop, wipe, rebuild
 
@@ -92,7 +116,8 @@ project are unrelated — leave them running.
 
 | Server | URL | Source |
 |---|---|---|
-| Demo Vite | http://127.0.0.1:3000 | `npm run dev` |
+| MajiBill staff web | http://127.0.0.1:3001 | `npm run dev` (the real app) |
+| Demo Vite | http://127.0.0.1:3000 | `npm run demo` (isolated pitch) |
 | MajiBill API | http://127.0.0.1:4000 | `npm run dev:api` / compose `app` |
 | MajiBill Postgres | 127.0.0.1:5434 | `majibill-majibill-postgres-1` |
 | MajiBill Redis | 127.0.0.1:6381 | `majibill-majibill-redis-1` |
@@ -106,7 +131,10 @@ project are unrelated — leave them running.
   matches `.env`; `docker compose logs majibill-postgres`.
 - API `:4000` silent → `PORT/HOST` env; `dist/` rebuilt?
   (`npm run build --workspace @majibill/core-api`).
-- Stale `docker_postgres` containers → `docker compose -f
-  infra/docker/compose.yaml down`; the old path is retired.
+- Stale `docker_postgres` containers → `docker compose down`; the old
+  `infra/docker/compose.yaml` path is retired (deleted).
+- If you ever ran `npm run dev` expecting the demo: that was the old
+  map. Now `npm run dev` → staff web :3001 (real app),
+  `npm run demo` → Vite :3000 (pitch). Both verified live 2026-10-11.
 - `npm install` ENOTEMPTY → kill duelling installs, `rm -rf
   node_modules/.<pkg>-*`, reinstall once.

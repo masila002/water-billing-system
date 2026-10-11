@@ -1,0 +1,20 @@
+{
+  "name": "majibill-demo",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "MajiBill pitch demo (isolated): Vite dashboard + NestJS API + fictional seed. No shared runtime with root MajiBill.",
+  "scripts": {
+    "dev": "npm run dev --workspace @majibill/demo-frontend -- --host 127.0.0.1",
+    "build": "npm run build --workspace @majibill/demo-frontend && npm run build --workspace @majibill/demo-backend",
+    "preview": "npm run preview --workspace @majibill/demo-frontend -- --host 127.0.0.1",
+    "api": "npm run start:dev --workspace @majibill/demo-backend",
+    "test": "node --test frontend/tests/*.test.js",
+    "test:e2e": "playwright test -c ../playwright.config.js",
+    "test:integration": "npm run test:integration --workspace @majibill/demo-backend"
+  },
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}

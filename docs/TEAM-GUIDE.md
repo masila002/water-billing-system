@@ -3,6 +3,10 @@
 For every engineer, designer and reviewer joining this repo. Read this
 before touching code. Ten minutes, no prerequisites.
 
+> **Root takeover (spec 03):** bare `npm run dev/build/test` serve
+> **MajiBill**. The demo lives behind `npm run demo`, `demo:build`,
+> `demo:test`, `demo:e2e`, `demo:api`. This guide is the contract.
+
 ## 1. Two systems, one repo, zero shared runtime
 
 | | `demo-app/` — the pitch demo | Root — **`MAJIBILL`**, the real product |
@@ -43,26 +47,36 @@ enforces the MajiBill side.
 ### Demo (pitch laptop, no Docker)
 
 ```bash
-npm install
-npm run dev            # Vite :3000, fictional data, no credentials
+npm run demo             # Vite :3000, fictional data, no credentials
+npm run demo:build       # builds demo only
+npm run demo:test        # 13 domain tests
+npm run demo:e2e         # browser suite (:3100)
 ```
 
-Optional legacy API mode (`npm run api`, :4000 with `DATABASE_URL`)
-is presenter-only and still fictional data. Never expose it.
+Demo env is sealed: `demo-app/.env` (`DEMO_DATABASE_URL`, port 4001)
+is the only file the demo backend reads — the root `.env` holding the
+real `DATABASE_URL` is never loaded, and the demo refuses to boot
+against `:5434/majibill`.
+
+Optional legacy API mode (`npm run demo:api`, :4000 explicit) is
+presenter-only and still fictional data. Never expose it.
 
 ### MajiBill (dev machine, Docker required)
 
 ```bash
+npm run dev              # staff web :3001 (the real app entry)
 cp -n .env.example .env     # once; set POSTGRES_PASSWORD
 docker compose up -d        # majibill-postgres :5434 + majibill-redis :6381
 DATABASE_URL=postgres://majibill:<pw>@127.0.0.1:5434/majibill node db/migrate.js
-npm run dev:api             # core API :4000  (or --profile app for the container)
+npm run dev:api             # core API :4000 (or --profile app for the container)
+npm run build            # core-api + domain + staff-web
+npm test                 # 14 production domain tests
 ```
 
 Full command reference: [dev manual](DEV-MANUAL.md).
-Port map: demo Vite :3000 · MajiBill API :4000 · MajiBill Postgres
-:5434 · MajiBill Redis :6381. Griot's 5433/6380 and the defaults are
-never touched.
+Port map: staff web :3001 (real app) · demo Vite :3000 · MajiBill API
+:4000 · MajiBill Postgres :5434 · MajiBill Redis :6381. Griot's
+5433/6380 and the defaults are never touched.
 
 ## 4. Where work goes (Griot-style layers)
 
@@ -98,8 +112,8 @@ ADR.
 
 ## 5. Definition of done per side
 
-- **Demo:** `npm run build && npm test && npm run test:e2e` green.
-- **MajiBill:** `npm run build:production && npm run test:production`
+- **Demo:** `npm run demo:build && npm run demo:test && npm run demo:e2e` green.
+- **MajiBill:** `npm run build && npm test && npm run gates`
   green, migrations apply on a fresh container, RLS catalog clean,
   new matrix cells tested, `docker compose config -q` clean.
 
@@ -107,7 +121,7 @@ ADR.
 
 | Area | Path | Gate | Tracker |
 |---|---|---|---|
-| demo | `demo-app` | `npm run build && npm test && npm run test:e2e` | `docs/trackers/demo.md` |
+| demo | `demo-app` | `npm run demo:build && npm run demo:test && npm run demo:e2e` | `docs/trackers/demo.md` |
 | api | `apps/api` | `npm run build --workspace @majibill/core-api` | `docs/trackers/api.md` |
 | web | `apps/web` | `npm run build --workspace @majibill/staff-web` | `docs/trackers/web.md` |
 | reader | `apps/reader` | `npm run test:production` (Expo verify on slice) | `docs/trackers/reader.md` |

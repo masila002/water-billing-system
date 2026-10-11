@@ -1,6 +1,6 @@
 # Spec majibill/01 — production layers scaffold
 
-Status: Proposed
+Status: Approved
 Depth: beta
 Scope: docs/scope/01-layers.md#F01-F11
 SDRs: SDR-001/R2, SDR-007/R1-R3, SDR-009/R1-R3
