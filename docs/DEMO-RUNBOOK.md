@@ -11,8 +11,8 @@ Describe this honestly: “MajiBill is a water billing workflow demo built by 40
 1. **Overview (45 seconds).** Show customers, billed amounts, confirmed collections and outstanding bills. These figures come from the demo records and change as you work.
 2. **Customer (45 seconds).** Add `Demo Pitch Customer` with the suggested customer number. Optional phone/email may be left empty. Search the register to show the record.
 3. **Connection (45 seconds).** Open Accounts → Connect a meter. Select the new customer, use `ACC-PITCH` / `MTR-PITCH`, Domestic tariff and opening reading **100**.
-4. **Reading (60 seconds).** Open Meter readings → Capture reading. Select `ACC-PITCH`, enter **120**, retain today's date. Point out the **20 m³** usage preview. A reading lower than 100 is rejected.
-5. **Bill (60 seconds).** Open Bills → Issue bill. The new unbilled reading is selected. The illustrative rate is **KES 75/m³ + KES 150 fixed**, so the bill is **KES 1,650**. Review the period and due date, issue, then View / print the invoice.
+4. **Reading and bill (60 seconds).** Open Meter readings → Capture reading. Select `ACC-PITCH`, enter **120**, retain today's date. Point out the **20 m³** usage and **KES 1,650** estimated bill preview (KES 75/m³ + KES 150 fixed). Saving the reading creates the invoice automatically; a reading lower than 100 is rejected.
+5. **Bill (30 seconds).** Open Bills to show the invoice created from the saved reading, then View / print it. The bill amount is added to the account balance immediately.
 6. **Collection (75 seconds).** Open Payments → Record payment. Select the pitch bill, record **KES 650**, choose M-Pesa (simulated), reference `DEMO-PITCH-1`. Show Bills: balance **KES 1,000**, partially paid. Record the remaining **KES 1,000**, reference `DEMO-PITCH-2`. Show the receipt and settled bill. No live money moves.
 7. **Visibility (60 seconds).** Reports shows collections and outstanding accounts; export balances to CSV. Activity log shows who recorded each action. Reload to demonstrate persistence. Switch to Meter reader: customer/payment write actions disappear.
 

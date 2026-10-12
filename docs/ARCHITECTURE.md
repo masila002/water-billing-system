@@ -15,7 +15,7 @@ flowchart LR
 
 `frontend/src/lib/demo-store.js` owns fictional data, authorization illustrations, relationship validation, money and persistence. It reloads state per request, writes only after validation, and reports storage failures. It is intended for one presenter/tab, not concurrent staff or multi-device use. Each successful mutation records actor role, entity and timestamp; this is editable local activity history.
 
-`frontend/src/lib/billing.js` calculates integer cents with half-up rounding from thousandths of a cubic metre. The bill preview and issuance share it. Bills are unique per reading with nonoverlapping account periods. Payment allocations cannot exceed the remaining bill balance. A repeated idempotency key with the same normalized payload returns the original record; conflicting details fail. Customer, account, meter and payment references have uniqueness checks.
+`frontend/src/lib/billing.js` calculates integer cents with half-up rounding from thousandths of a cubic metre. The reading preview and automatic invoice creation share it. A reading and its invoice are persisted together; bills are unique per reading with nonoverlapping account periods. Payment allocations cannot exceed the remaining bill balance. A repeated idempotency key with the same normalized payload returns the original record; conflicting details fail. Customer, account, meter and payment references have uniqueness checks.
 
 Demo personas:
 
@@ -24,7 +24,7 @@ Demo personas:
 | View records/reports | Yes | Yes | Yes | Yes |
 | Add customer/account | Yes | No | No | No |
 | Submit reading | Yes | Yes | No | No |
-| Issue bill | Yes | No | No | Yes |
+| Submit reading and create its bill | Yes | Yes | No | No |
 | Record payment | Yes | No | Yes | No |
 
 These checks run at the demo mutation boundary and have negative tests. The persona itself is selected by the presenter and is not a secure identity. Reset is a presenter control available in settings.

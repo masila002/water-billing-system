@@ -48,14 +48,14 @@ function journey(f) {
     idempotencyKey: "reading-new",
   };
   const reading = f.post("/readings", readingInput);
+  const bill = reading.generatedBill;
   const billInput = {
     serviceAccountId: account.id,
     meterReadingId: reading.id,
-    periodStart: "2026-10-01",
-    periodEnd: "2026-10-10",
-    dueAt: "2026-10-25",
+    periodStart: bill.periodStart,
+    periodEnd: bill.periodEnd,
+    dueAt: bill.dueAt,
   };
-  const bill = f.post("/bills/generate", billInput);
   return { customer, account, reading, bill, readingInput, billInput };
 }
 const payment = (account, bill, overrides = {}) => ({
@@ -73,6 +73,11 @@ test("AC2–4 full customer, meter, reading, bill and partial/full payment journ
   const initial = f.get("/dashboard");
   const { account, bill } = journey(f);
   assert.equal(bill.totalMinor, 150000); // 18 units × KES 75 + KES 150.
+  assert.equal(f.get("/bills").find((item) => item.id === bill.id).totalMinor, 150000);
+  assert.equal(
+    f.get("/accounts").find((item) => item.id === account.id).balanceMinor,
+    150000,
+  );
   f.post("/payments", payment(account, bill));
   assert.equal(
     f.get("/bills").find((b) => b.id === bill.id).status,
@@ -190,7 +195,7 @@ test("AC3 chronological and precision rules reject stale, regressing, future and
   assert.equal(f.post("/readings", base).consumption, 2);
 });
 
-test("AC3 bill periods validate order, due date, reading inclusion, account ownership and overlap", () => {
+test("AC3 automatic invoices use consecutive periods and manual replays cannot alter them", () => {
   const f = fixture();
   const { account, billInput } = journey(f);
   const reading = f.post("/readings", {
@@ -200,13 +205,25 @@ test("AC3 bill periods validate order, due date, reading inclusion, account owne
     readAt: "2026-10-11",
     idempotencyKey: "next",
   });
+  assert.deepEqual(
+    {
+      periodStart: reading.generatedBill.periodStart,
+      periodEnd: reading.generatedBill.periodEnd,
+      dueAt: reading.generatedBill.dueAt,
+    },
+    {
+      periodStart: "2026-10-11",
+      periodEnd: "2026-10-11",
+      dueAt: "2026-10-25",
+    },
+  );
   const base = {
     ...billInput,
     meterReadingId: reading.id,
     periodStart: "2026-10-10",
     periodEnd: "2026-10-11",
   };
-  assert.throws(() => f.post("/bills/generate", base), /overlaps/);
+  assert.throws(() => f.post("/bills/generate", base), /already billed/);
   for (const changed of [
     { periodStart: "2026-10-12" },
     { dueAt: "2026-10-10" },
@@ -217,9 +234,17 @@ test("AC3 bill periods validate order, due date, reading inclusion, account owne
     assert.throws(() => f.post("/bills/generate", { ...base, ...changed }));
   }
   assert.equal(
-    f.post("/bills/generate", { ...base, periodStart: "2026-10-11" })
-      .totalMinor,
-    30000,
+    f.post("/bills/generate", {
+      ...base,
+      periodStart: "2026-10-11",
+      dueAt: "2026-10-25",
+    }).id,
+    reading.generatedBill.id,
+  );
+  assert.equal(
+    f.get("/bills").filter((bill) => bill.serviceAccountId === account.id)
+      .length,
+    2,
   );
 });
 
@@ -239,14 +264,12 @@ test("AC3 fractional water units use exact half-up rounding to cents", () => {
     readAt: "2026-10-10",
     idempotencyKey: "fraction",
   });
-  const bill = f.post("/bills/generate", {
-    serviceAccountId: account.id,
-    meterReadingId: reading.id,
-    periodStart: "2026-10-01",
-    periodEnd: "2026-10-10",
-    dueAt: "2026-10-11",
-  });
-  assert.equal(bill.totalMinor, 15008);
+  assert.equal(reading.generatedBill.totalMinor, 15008);
+  assert.equal(
+    f.get("/bills").find((bill) => bill.id === reading.generatedBill.id)
+      .totalMinor,
+    15008,
+  );
 });
 
 test("AC4 rejects invalid, unsafe and excessive payments and mismatched account links", () => {

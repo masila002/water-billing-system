@@ -7,7 +7,6 @@ import { openPaymentForm } from "../features/payment-form.js";
 import {
   openAccountForm,
   openReadingForm,
-  openBillForm,
 } from "../features/workflow-forms.js";
 import { renderRecords, filterRecords } from "../features/records.js";
 import { renderReports, downloadCSV } from "../features/reports.js";
@@ -21,7 +20,6 @@ const forms = {
   "add-customer": openCustomerForm,
   "add-account": openAccountForm,
   "add-reading": openReadingForm,
-  "generate-bill": openBillForm,
   "record-payment": openPaymentForm,
 };
 let generation = 0;

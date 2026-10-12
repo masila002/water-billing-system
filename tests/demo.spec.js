@@ -56,11 +56,9 @@ test("full pitch: customer, meter, reading, bill, partial/full receipt, report a
     .selectOption({ label: "ACC-PITCH · Demo Pitch Customer · MTR-PITCH" });
   await page.getByLabel("Current reading").fill("120");
   await expect(page.locator("#reading-preview")).toContainText("20.000");
+  await expect(page.locator("#reading-preview")).toContainText("1,650");
   await save(page, "Save reading");
   await nav(page, "Bills");
-  await page.getByRole("button", { name: "Issue bill", exact: true }).click();
-  await expect(page.locator("#bill-preview")).toContainText("1,650");
-  await save(page, "Issue bill");
   const bill = page.getByRole("row").filter({ hasText: "Demo Pitch Customer" });
   await expect(bill).toContainText("1,650");
   await bill.getByRole("button", { name: "View / print" }).click();

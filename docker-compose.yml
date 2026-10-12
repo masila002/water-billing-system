@@ -1,0 +1,70 @@
+# MajiBill — local topology (operator direction 2026-10-11).
+# One compose project "majibill" with its own containers, network and
+# volumes. Production stays managed-Postgres + managed-Redis + container
+# host; these containers are development only.
+#
+#   cp .env.example .env          # once, then set POSTGRES_PASSWORD
+#   docker compose up -d          # majibill-postgres + majibill-redis, what the API talks to
+#   docker compose --profile app up -d --build   # adds the API container on :4000
+#
+# Host ports stay 5434 (Postgres) and 6381 (Redis) so the stack never
+# collides with other local projects or anything on the defaults.
+name: majibill
+
+services:
+  majibill-postgres:
+    image: postgres:16-alpine
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-majibill}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (copy .env.example)}"
+      POSTGRES_DB: "${POSTGRES_DB:-majibill}"
+    ports: ["5434:5432"]
+    volumes: [majibill_pg:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  majibill-redis:
+    image: redis:7-alpine
+    ports: ["6381:6379"]
+    volumes: [majibill_redis:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # The API image. Opt-in: the everyday loop runs the API locally against
+  # the two stores above; the container needs DATABASE_URL + REDIS_URL.
+  majibill-api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    env_file:
+      - path: ./apps/api/.env
+        required: false
+    environment:
+      DATABASE_URL: "postgres://${POSTGRES_USER:-majibill}:${POSTGRES_PASSWORD:?}@majibill-postgres:5432/${POSTGRES_DB:-majibill}"
+      REDIS_URL: "redis://majibill-redis:6379"
+      PORT: 4000
+      HOST: 0.0.0.0
+    ports: ["4000:4000"]
+    depends_on:
+      majibill-postgres: { condition: service_healthy }
+      majibill-redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:4000/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+volumes:
+  majibill_pg:
+  majibill_redis:

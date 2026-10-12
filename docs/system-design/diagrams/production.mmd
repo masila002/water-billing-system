@@ -1,0 +1,10 @@
+flowchart LR
+  staff[Staff web Next.js] --> api[Core API NestJS]
+  reader[Reader Expo RN] --> api
+  api --> pg[(Postgres 16 RLS)]
+  api --> redis[(Redis BullMQ)]
+  daraja[Daraja C2B callbacks] --> inbox[(payment_inbox)]
+  inbox --> worker[Posting worker]
+  worker --> ledger[(Ledger)]
+  api --> sms[SMS gateway]
+  api --> obj[(Object storage)]

@@ -36,7 +36,8 @@ export function openReadingForm(state, afterSaved) {
   const key = crypto.randomUUID();
   openDialog({
     title: "Capture a meter reading",
-    subtitle: "Consumption is the difference from the last accepted reading.",
+    subtitle:
+      "Review the usage and estimated bill. Saving the reading creates the invoice.",
     submitLabel: "Save reading",
     content: `<div class="form-grid">${select("Service account", "serviceAccountId", accounts.map((a) => option(a.id, `${a.accountNumber} · ${a.customerName} · ${a.meterNumber}`)).join(""))}<div class="calculation form-field-wide" id="reading-preview"></div>${field("Current reading (m³)", "currentReading", "number", "Enter cumulative meter value", true)}${field("Reading date", "readAt", "date", "", true)}${field("Field notes", "notes", "text", "Optional observation")}</div>`,
     onSubmit: (form) => {
@@ -52,7 +53,13 @@ export function openReadingForm(state, afterSaved) {
         idempotencyKey: key,
       });
     },
-    onSaved: afterSaved,
+    onSaved: async (result) => {
+      await afterSaved();
+      if (result.generatedBill)
+        setToast(
+          `Reading saved. ${result.generatedBill.billNumber} for ${formatMoney(result.generatedBill.totalMinor)} is now in Bills.`,
+        );
+    },
   });
   const date = document.querySelector('[name="readAt"]');
   date.value = new Date().toISOString().slice(0, 10);
@@ -64,8 +71,27 @@ export function openReadingForm(state, afterSaved) {
     const a = accounts.find(
       (a) => a.id === document.querySelector('[name="serviceAccountId"]').value,
     );
-    document.querySelector("#reading-preview").textContent =
-      `Previous: ${a.lastReading || 0} m³ · Consumption: ${input.value ? (Number(input.value) - Number(a.lastReading || 0)).toFixed(3) : "—"} m³`;
+    const previous = Number(a.lastReading || 0);
+    const current = Number(input.value);
+    input.min = String(previous);
+    const preview = document.querySelector("#reading-preview");
+    if (!input.value) {
+      preview.textContent = `Previous: ${previous} m³ · Consumption: — · Estimated bill: —`;
+      return;
+    }
+    if (!Number.isFinite(current) || current < previous) {
+      preview.textContent = `Previous: ${previous} m³ · Current reading must be at least ${previous} m³.`;
+      return;
+    }
+    const tariff = state.data.tariffs.find((item) => item.id === a.tariffId);
+    const total = calculateBillMinor(
+      previous,
+      current,
+      tariff.ratePerUnitMinor,
+      tariff.fixedChargeMinor,
+    );
+    preview.textContent =
+      `Previous: ${previous} m³ · Consumption: ${(current - previous).toFixed(3)} m³ · Estimated bill: ${formatMoney(total)}. Demo tariff.`;
   };
   document
     .querySelector('[name="serviceAccountId"]')

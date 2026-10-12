@@ -8,10 +8,6 @@ import { randomUUID } from 'node:crypto';
 import { DatabaseService } from '../database/database.service';
 import { GenerateBillDto } from '../dto/generate-bill.dto';
 
-function toIsoDate(value: string | Date): string {
-  return new Date(value).toISOString().slice(0, 10);
-}
-
 @Injectable()
 export class BillingService {
   constructor(private readonly database: DatabaseService) {}
@@ -22,8 +18,8 @@ export class BillingService {
         `SELECT b.id, b.bill_number AS "billNumber",
                 b.service_account_id AS "serviceAccountId",
                 a.account_number AS "accountNumber", c.full_name AS "customerName",
-                b.period_start AS "periodStart", b.period_end AS "periodEnd",
-                b.due_at AS "dueAt", b.status,
+                b.period_start::text AS "periodStart", b.period_end::text AS "periodEnd",
+                b.due_at::text AS "dueAt", b.status,
                 b.subtotal_minor AS "subtotalMinor", b.total_minor AS "totalMinor",
                 b.issued_at AS "issuedAt"
            FROM bills b
@@ -43,8 +39,8 @@ export class BillingService {
     return this.database.withTenantTransaction(tenantId, async (client) => {
       const previouslyGenerated = await client.query(
         `SELECT id, bill_number AS "billNumber", service_account_id AS "serviceAccountId",
-                period_start AS "periodStart", period_end AS "periodEnd",
-                due_at AS "dueAt", status, subtotal_minor AS "subtotalMinor",
+                period_start::text AS "periodStart", period_end::text AS "periodEnd",
+                due_at::text AS "dueAt", status, subtotal_minor AS "subtotalMinor",
                 total_minor AS "totalMinor", issued_at AS "issuedAt"
            FROM bills
           WHERE tenant_id = $1 AND meter_reading_id = $2`,
@@ -52,11 +48,15 @@ export class BillingService {
       );
       if (previouslyGenerated.rowCount) {
         const saved = previouslyGenerated.rows[0];
+        // DATE columns travel as ISO calendar-day text: node-pg builds DATE
+        // values at local midnight, so day extraction shifts the day on
+        // runtimes east of UTC (F04, review S1). Text is exact everywhere,
+        // for both comparison and the returned response shape.
         if (
           saved.serviceAccountId !== input.serviceAccountId ||
-          toIsoDate(saved.periodStart) !== input.periodStart ||
-          toIsoDate(saved.periodEnd) !== input.periodEnd ||
-          toIsoDate(saved.dueAt) !== input.dueAt
+          saved.periodStart !== input.periodStart ||
+          saved.periodEnd !== input.periodEnd ||
+          saved.dueAt !== input.dueAt
         ) {
           throw new ConflictException(
             'This meter reading has already been billed with different details',
@@ -119,8 +119,8 @@ export class BillingService {
             period_start, period_end, due_at, subtotal_minor, total_minor)
          VALUES ($1, $2, $3, $4, $5::date, $6::date, $7::date, $8, $8)
          RETURNING id, bill_number AS "billNumber", service_account_id AS "serviceAccountId",
-                   period_start AS "periodStart", period_end AS "periodEnd",
-                   due_at AS "dueAt", status, subtotal_minor AS "subtotalMinor",
+                   period_start::text AS "periodStart", period_end::text AS "periodEnd",
+                   due_at::text AS "dueAt", status, subtotal_minor AS "subtotalMinor",
                    total_minor AS "totalMinor", issued_at AS "issuedAt"`,
         [
           tenantId,

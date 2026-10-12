@@ -62,6 +62,73 @@ function safeTotal(values) {
     fail("Amount exceeds supported limits.");
   return Number(total);
 }
+function addDays(day, days) {
+  const value = new Date(`${day}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+function readingBillPeriod(state, account, reading) {
+  const lastBill = state.bills
+    .filter((bill) => bill.serviceAccountId === account.id)
+    .sort((a, b) => b.periodEnd.localeCompare(a.periodEnd))[0];
+  const previousReading = state.readings
+    .filter((item) => item.serviceAccountId === account.id)
+    .sort((a, b) => b.readAt.localeCompare(a.readAt))[0];
+  const previousEnd =
+    lastBill?.periodEnd ?? previousReading?.readAt.slice(0, 10);
+  const readDay = reading.readAt.slice(0, 10);
+  const periodStart = previousEnd
+    ? addDays(previousEnd, 1)
+    : `${readDay.slice(0, 7)}-01`;
+  return {
+    periodStart,
+    periodEnd: readDay,
+    dueAt: addDays(readDay, 14),
+  };
+}
+function createReadingBill(state, account, reading, period, createdAt, id) {
+  if (period.periodEnd < period.periodStart)
+    fail("Reading date must be later than the last billed period.");
+  if (
+    state.bills.some(
+      (bill) =>
+        bill.serviceAccountId === account.id &&
+        bill.periodStart <= period.periodEnd &&
+        bill.periodEnd >= period.periodStart,
+    )
+  )
+    fail("This billing period overlaps an existing bill.");
+  const tariff =
+    state.tariffs.find((item) => item.id === account.tariffId && item.isActive) ||
+    fail("Active tariff not found.");
+  const totalMinor = calculateBillMinor(
+    reading.previousReading,
+    reading.currentReading,
+    tariff.ratePerUnitMinor,
+    tariff.fixedChargeMinor,
+  );
+  const bill = {
+    id: id(),
+    serviceAccountId: account.id,
+    accountNumber: account.accountNumber,
+    customerName: account.customerName,
+    meterReadingId: reading.id,
+    billNumber: `INV-${createdAt.slice(0, 4)}-${String(state.bills.length + 1).padStart(4, "0")}`,
+    ...period,
+    consumption: reading.consumption,
+    ratePerUnitMinor: tariff.ratePerUnitMinor,
+    fixedChargeMinor: tariff.fixedChargeMinor,
+    subtotalMinor: totalMinor,
+    totalMinor,
+    paidMinor: 0,
+    balanceMinor: totalMinor,
+    status: "issued",
+    issuedAt: createdAt,
+  };
+  account.balanceMinor = safeTotal([account.balanceMinor, totalMinor]);
+  state.bills.unshift(bill);
+  return bill;
+}
 function seed() {
   const state = {
     version: 1,
@@ -397,6 +464,7 @@ export function createDemoStore({
       return clone(saved);
     };
     let record;
+    let generatedBill;
     let collection;
     let eventType;
     if (path === "/customers") {
@@ -458,7 +526,10 @@ export function createDemoStore({
       };
       const key = text(input.idempotencyKey, "idempotency key");
       const repeated = replay(state.readings, key, normalized);
-      if (repeated) return repeated;
+      if (repeated) {
+        const bill = state.bills.find((item) => item.meterReadingId === repeated.id);
+        return bill ? { ...repeated, generatedBill: clone(bill) } : repeated;
+      }
       const account = findAccount(normalized.serviceAccountId);
       if (account.status !== "active")
         fail("Only active accounts can receive readings.");
@@ -488,6 +559,14 @@ export function createDemoStore({
         idempotencyKey: key,
         createdAt,
       };
+      generatedBill = createReadingBill(
+        state,
+        account,
+        record,
+        readingBillPeriod(state, account, record),
+        createdAt,
+        id,
+      );
       account.lastReading = normalized.currentReading;
       collection = "readings";
       eventType = "meter_reading.submitted";
@@ -621,8 +700,21 @@ export function createDemoStore({
       createdAt,
       details: `${eventType.replaceAll(".", " ")}: ${record.billNumber || record.accountNumber || record.customerNumber || record.id}`,
     });
+    if (generatedBill)
+      state.audit.unshift({
+        id: id(),
+        eventType: "bill.generated",
+        entityType: "bills",
+        entityId: generatedBill.id,
+        role: context.role,
+        actorRole: context.role,
+        createdAt,
+        details: `bill generated: ${generatedBill.billNumber}`,
+      });
     save(state);
-    return clone(record);
+    return clone(
+      generatedBill ? { ...record, generatedBill } : record,
+    );
   }
   return {
     request,

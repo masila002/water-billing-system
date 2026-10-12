@@ -4,8 +4,8 @@ The API is a NestJS service using PostgreSQL through `pg`. It expects the databa
 
 ## Start locally
 
-1. Copy `../.env.example` to `../.env`.
-2. Replace the placeholder `DATABASE_URL` with a rotated Neon URL. Keep `.env` local and do not commit it.
+1. Copy `.env.example` to `.env` inside `demo-app/` (never the root `.env`).
+2. Put a fictional/demo `DEMO_DATABASE_URL` in `demo-app/.env`. The demo refuses to boot against the real database (`:5434`, `/majibill`). Keep `.env` local and do not commit it.
 3. From this directory, install and start:
 
    ```powershell
@@ -13,7 +13,7 @@ The API is a NestJS service using PostgreSQL through `pg`. It expects the databa
    npm run start:dev
    ```
 
-The API listens on `127.0.0.1:4000` by default. `HOST` may be set explicitly for a separately secured deployment. Environment variables supplied by the process take precedence; when `../.env` exists it is loaded for local development.
+The API listens on `127.0.0.1:4001` by default (never the real API's `:4000`). `HOST` may be set explicitly for a separately secured deployment. Environment variables supplied by the process take precedence; `demo-app/.env` is loaded by file path. The root `.env` is never read.
 
 ## Routes
 

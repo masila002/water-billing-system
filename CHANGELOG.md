@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- Added MajiBill production layers scaffold (spec majibill/01, scope 01):
+  backend/web/mobile pointers + AGENTS, mcp/ + ai/ alpha stubs
+  (typecheck clean), qa/ plan, inspo/ + docs/inspo isolation,
+  devops/ cells path, packages/ui + packages/config, scripts gates
+  (rls/contract/inspo/secrets/compose) wired as `npm run gates`.
+  Retired infra/docker/compose.yaml (root compose is canonical).
+  Decisions D-013..D-024 proposed in register (merge approves).
+  Cost/tradeoffs/scaling/hosting per layer in spec §13.
+- Added isolated backend verification: `npm run test:integration` proves the NestJS API and PostgreSQL schema against a disposable loopback database (23 checks: supported money path, tenant isolation, replays, payment race, rollback, negative cases).
+- Added a CI integration job running the same suite; it fails when Docker is unavailable and never skips silently.
+- Characterized, not repaired: backdated chained readings pass; overlapping bill periods pass; meter numbers are not unique; list responses carry no computed balances; payment references are unique per method.
+- Fixed timezone-sensitive bill replay: identical replays compared DATE columns through local-time construction and wrongly returned 409 on runtimes east of UTC; replay now compares ISO calendar-day text. The integration suite runs under UTC and Africa/Nairobi in CI.
+
+- Added GitHub Actions verification for pull requests and `main`: locked dependency installation, both application builds, domain tests and Chromium browser tests on Node.js 22.
+- Added bounded CI runs, pinned actions, read-only repository permissions and failure diagnostics retained for seven days.
+
 ## 0.2.0 — 2026-10-11
 
 - Completed the local water-billing demo from customer registration through payment receipt.

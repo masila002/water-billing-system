@@ -46,9 +46,9 @@ export function openDialog({
       submit.disabled = true;
       error.textContent = "";
       try {
-        await onSubmit(new FormData(event.currentTarget));
+        const result = await onSubmit(new FormData(event.currentTarget));
         close();
-        await onSaved?.();
+        await onSaved?.(result);
       } catch (failure) {
         error.textContent = failure.message;
         submit.disabled = false;

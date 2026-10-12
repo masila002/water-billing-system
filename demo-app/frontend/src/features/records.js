@@ -50,7 +50,7 @@ export const configurations = {
     title: "Meter readings",
     eyebrow: "FIELD OPERATIONS",
     description:
-      "Capture usage, catch errors and prepare accurate water bills.",
+      "Capture a reading to calculate usage and automatically create its bill.",
     action: "Capture reading",
     actionId: "add-reading",
     demoOnly: true,
@@ -68,10 +68,8 @@ export const configurations = {
   bills: {
     title: "Bills",
     eyebrow: "BILLING REGISTER",
-    description: "From measured consumption to a clear, traceable invoice.",
-    action: "Issue bill",
-    actionId: "generate-bill",
-    demoOnly: true,
+    description:
+      "Invoices are created automatically when a meter reading is saved.",
     columns: [
       "INVOICE",
       "CUSTOMER",

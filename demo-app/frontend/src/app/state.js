@@ -13,7 +13,6 @@ export const permissions = {
   "add-customer": ["admin"],
   "add-account": ["admin"],
   "add-reading": ["admin", "reader"],
-  "generate-bill": ["admin", "accountant"],
   "record-payment": ["admin", "cashier"],
 };
 export function can(state, action) {
