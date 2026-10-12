@@ -38,6 +38,10 @@ npm run test:e2e                # Complete journey + mobile + failure recovery
 
 Browser evidence is generated under `test-results/` (ignored by Git). The root npm workspace and lockfile are authoritative; run installation from this directory.
 
+## Pull request reviews
+
+The repository includes [CodeRabbit configuration](.coderabbit.yaml) for automatic, balanced reviews of non-draft pull requests, including guidance for tenant isolation and financial correctness. To activate it, an owner must connect the repository to the [CodeRabbit GitHub App](https://github.com/apps/coderabbitai). Disable or uninstall Sourcery for this repository in GitHub's installed-app settings to avoid duplicate reviews. GitHub Actions continues to run builds and tests separately.
+
 ## Project structure
 
 ```text

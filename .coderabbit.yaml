@@ -1,0 +1,22 @@
+language: en-US
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+  path_instructions:
+    - path: "demo-app/backend/src/**"
+      instructions: |
+        - Treat tenant isolation as a security invariant. Tenant-owned queries must run in a transaction with transaction-local app.tenant_id context and use parameterized SQL.
+        - Keep billing and payment calculations in integer minor units or exact arithmetic; do not introduce floating-point currency math.
+        - Keep financial writes and their audit events in the same transaction. Avoid changing historical financial records in place.
+        - The X-Tenant-ID header is a demo-only tenant selector, not authenticated identity or authorization.
+    - path: "demo-app/database/**"
+      instructions: |
+        - Preserve tenant_id scoping, row-level security, and composite foreign keys that prevent cross-tenant relationships.
+        - Keep payment idempotency and append-only audit behavior intact.
+        - Check that schema changes remain consistent with the backend queries and the demo seed.
